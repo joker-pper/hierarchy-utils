@@ -2,10 +2,10 @@
     用于构建树形数据的通用工具库,支持过滤数据、排序及自定义转换数据
 
 
-##使用
+## 使用
 
 
-###数据结构 - 菜单
+### 数据结构 - 菜单
 
 ``` 
 @Data
@@ -18,7 +18,7 @@ public class Menu {
 }
 ``` 
 
-###1.通过原数据结构返回树形数据
+### 1.通过原数据结构返回树形数据
 ``` 
         //查询当前用户的菜单列表(可模拟数据)
         List<Menu> dataList = menuService.findAllByUserId(1);
@@ -61,7 +61,7 @@ public class Menu {
 
 ``` 
 
-###2.原数据结构未定义children,通过转换数据结构返回树形数据
+### 2.原数据结构未定义children,通过转换数据结构返回树形数据
 ``` 
 
         //查询当前用户的菜单列表(可模拟数据)
@@ -118,7 +118,7 @@ public class Menu {
         System.out.println(JSONObject.toJSONString(transferResults));
 
 ``` 
-###3.返回源数据列表中id为rootId的元素或pid为rootId且id能整除2的全部子元素的数据列表
+### 3.返回源数据列表中id为rootId的元素或pid为rootId且id能整除2的全部子元素的数据列表
 ``` 
 
         //查询当前用户的菜单列表(可模拟数据)
