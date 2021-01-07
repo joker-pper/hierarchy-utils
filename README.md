@@ -51,6 +51,12 @@ public class Menu {
             parent.setChildren(children);
         });
 
+        //是否返回root元素(未设置时默认false,开启时root元素必须存在)
+        functions.setIsWithRoot(() -> false);
+
+        //过滤条件(可选,用来筛选数据)
+        //functions.setFilterPredicate(menu -> true);
+
         List<Menu> defaultResults = HierarchyUtils.getHierarchyResult(
                 dataList,
                 defaultFunctions,
@@ -108,6 +114,12 @@ public class Menu {
         transferFunctions.setSetChildrenFunction((parent, children) -> {
             parent.put("children", children);
         });
+
+        //是否返回root元素(未设置时默认false,开启时root元素必须存在)
+        transferFunctions.setIsWithRoot(() -> false);
+        
+        //过滤条件(可选,用来筛选数据)
+        //functions.setFilterPredicate(menu -> true);
 
         List<JSONObject> transferResults = HierarchyUtils.getHierarchyResult(
                 dataList,

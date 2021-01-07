@@ -34,7 +34,7 @@ public class HierarchyUtils {
 
         /**
          * 获取children函数
-         * 可选,存在时读取对应元素的子集合
+         * 可选,存在时读取对应元素的子元素
          */
         private Function<T, List<T>> getChildrenFunction;
 
@@ -145,6 +145,7 @@ public class HierarchyUtils {
 
     /**
      * 将源数据列表转换为树形结构
+     *
      * @param sourceList 源数据列表
      * @param functions
      * @param comparator 可选 (若数据源已有序且无过滤条件则无需再次排序)
@@ -211,7 +212,7 @@ public class HierarchyUtils {
         List<R> rootList = isWithRoot ? new ArrayList<>(2) : null;
         List<R> results = new ArrayList<>(32);
 
-        //获取元素id所对应的子集合(但不包含root pid)
+        //获取元素id所对应的子元素(但不包含root pid)
         Map<V, List<T>> toResolveSourceIdChildrenMap = HierarchyHelper.initAndGetIdChildrenResultMap(toResolveSourceList, getPidFunction, isRootPidFunction);
 
         if (!isEnableTransfer) {
@@ -334,7 +335,7 @@ public class HierarchyUtils {
             , final Function<T, V> getIdFunction
             , final Function<T, R> transferFunction
             , final BiConsumer<R, List<R>> setChildrenFunction
-            , R transferResult, final V id) {
+            , final R transferResult, final V id) {
         List<T> currentSourceChildrenList = toResolveSourceIdChildrenMap.get(id);
         List<R> transferChildrenList = null;
         if (currentSourceChildrenList != null && !currentSourceChildrenList.isEmpty()) {

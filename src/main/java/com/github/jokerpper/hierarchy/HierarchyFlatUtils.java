@@ -32,7 +32,7 @@ public class HierarchyFlatUtils {
 
         /**
          * 获取children函数
-         * 可选,存在时读取对应元素的子集合
+         * 可选,存在时读取对应元素的子元素
          */
         private Function<T, List<T>> getChildrenFunction;
 

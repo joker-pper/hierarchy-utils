@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 public class HierarchyHelper {
 
     /**
-     * 将sourceList中的所有元素(包含子集合)全部放入allSourceList中
+     * 将sourceList中的所有元素(包含子元素)全部放入allSourceList中
      *
      * @param sourceList      源数据列表
      * @param allSourceList   全部数据列表
@@ -32,7 +32,7 @@ public class HierarchyHelper {
     }
 
     /**
-     * 将sourceList中的所有元素(包含子集合)全部放入allSourceList中
+     * 将sourceList中的所有元素(包含子元素)全部放入allSourceList中
      *
      * @param sourceList          源数据列表
      * @param allSourceList       全部数据列表
@@ -51,7 +51,7 @@ public class HierarchyHelper {
     }
 
     /**
-     * 将sourceList中的所有元素(包含子集合)全部放入allSourceList中
+     * 将sourceList中的所有元素(包含子元素)全部放入allSourceList中
      *
      * @param sourceList          源数据列表
      * @param allSourceList       全部数据列表
@@ -73,7 +73,7 @@ public class HierarchyHelper {
     }
 
     /**
-     * 获取当前元素的子集合
+     * 获取当前元素的子元素
      *
      * @param getChildrenFunction 获取children函数
      * @param source
@@ -86,7 +86,7 @@ public class HierarchyHelper {
 
 
     /**
-     * 设置当前元素的子集合
+     * 设置当前元素的子元素
      *
      * @param setChildrenFunction
      * @param source
@@ -112,7 +112,7 @@ public class HierarchyHelper {
 
 
     /**
-     * 获取元素id所对应的子集合(但不包含root pid)
+     * 获取元素id所对应的子元素(但不包含root pid)
      *
      * @param toResolveSourceList 待处理的数据元素列表
      * @param getPidFunction      获取 pid 函数
