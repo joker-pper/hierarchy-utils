@@ -1,35 +1,21 @@
-# hierarchy-utils
-    用于构建/查找具有层级关系树形数据的工具库,以解决业务中常见的树形数据处理需求
-    支持自定义过滤数据、排序及转换数据等
+package com.github.jokerpper.hierarchy;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.github.jokerpper.hierarchy.model.Menu;
+import org.junit.Assert;
+import org.junit.Test;
 
-## 使用示例
+import java.util.*;
+import java.util.stream.Collectors;
 
+public class HierarchyUtilsTest extends HierarchyBaseTest {
 
-### 数据结构 - 菜单
-
-``` 
-@Data
-public class Menu {
-    private Integer id;
-    private String name;
-    private Integer pid;
-    private Integer sort;
-    private List<Menu> children;
-}
-``` 
-
-### 数据源
-
-        //查询当前用户的菜单列表
-        List<Menu> menuList = menuService.findAllByUserId();
-        //通过json转换
-        List<Menu> menuList = JSONObject.parseArray(menuText, Menu.class);;
-
-
-### 1.通过原数据结构返回树形数据
-
-``` 
+    /**
+     * 场景一: 通过原数据结构返回树形数据
+     */
+    @Test
+    public void t1() {
         //默认根元素为-1 (当前所有一级菜单的pid为-1,可根据实际定义根元素使用)
         Integer rootId = -1;
 
@@ -71,12 +57,14 @@ public class Menu {
 
         System.out.println(JSONObject.toJSONString(defaultResults));
 
-``` 
+    }
 
-### 2.原数据结构未定义children,通过转换数据结构返回树形数据
 
-``` 
-    
+    /**
+     * 场景二: 原数据结构未定义children,通过转换数据结构返回树形数据
+     */
+    @Test
+    public void t2() {
         //默认根元素为-1 (当前所有一级菜单的pid为-1,可根据实际定义根元素使用)
         Integer rootId = -1;
 
@@ -133,48 +121,90 @@ public class Menu {
 
         System.out.println(JSONObject.toJSONString(transferResults));
 
-        
-``` 
-### 3.返回源数据列表中id为rootId的元素或pid为rootId且id能整除2的全部子元素的数据列表
+    }
 
-``` 
+    /**
+     * simple test
+     */
+    @Test
+    public void testWithLinkHashMap() {
 
-        Integer rootId = 1;
+        List<LinkedHashMap> menuList = JSONObject.parseArray(menuText, LinkedHashMap.class);
 
-        HierarchyFlatUtils.HierarchyFlatFunctions<Menu, Integer, Menu> functions = new HierarchyFlatUtils.HierarchyFlatFunctions<>();
+        Object rootId = 1;
+
+        HierarchyUtils.HierarchyFunctions<LinkedHashMap, Object, LinkedHashMap> functions = new HierarchyUtils.HierarchyFunctions<>();
 
         //获取pid
-        functions.setGetPidFunction(data -> data.getPid());
+        functions.setGetPidFunction(data -> data.get("pid"));
 
         //获取id
-        functions.setGetIdFunction(data -> data.getId());
+        functions.setGetIdFunction(data -> data.get("id"));
 
         //验证是否为root pid
         functions.setIsRootPidFunction(pid -> Objects.equals(rootId, pid));
 
-        //是否返回root元素(未设置时默认false,开启时root元素必须存在)
-        functions.setIsWithRoot(() -> true);
+        //设置children
+        functions.setSetChildrenFunction((parent, children) -> {
+            parent.put("children", children);
+        });
 
-        //是否返回全部的子元素(未设置时默认false,即默认只返回root元素的直接子元素)
-        functions.setIsWithAllChildren(() -> true);
-
-        //过滤条件(可选,用来筛选数据)
-        functions.setFilterPredicate(menu -> menu.getId() % 2 == 0 || Objects.equals(rootId, menu.getId()));
-
-        //排序(需注意业务属性值是否为空),可选
-        Comparator<Menu> comparator = new Comparator<Menu>() {
+        Comparator comparator = new Comparator<LinkedHashMap>() {
             @Override
-            public int compare(Menu o1, Menu o2) {
-                return Integer.compare(o1.getSort(), o2.getSort());
+            public int compare(LinkedHashMap o1, LinkedHashMap o2) {
+                return Integer.compare((int) o1.get("sort"), (int) o2.get("sort"));
             }
         };
 
-        List<Menu> matchResults = HierarchyFlatUtils.getHierarchyFlatResult(
+        /**  验证root元素不存在 (默认)  **/
+
+        List<LinkedHashMap> defaultResults = HierarchyUtils.getHierarchyResult(
+                menuList,
+                functions,
+                comparator
+        );
+        Assert.assertEquals(0, defaultResults.stream().filter(it -> Objects.equals(it.get("id"), rootId)).count());
+
+        //所有元素pid都为root pid
+        Assert.assertEquals(new HashSet<>(Arrays.asList(rootId)), defaultResults.stream()
+                .map(it -> (Integer) it.get("pid")).collect(Collectors.toSet()));
+
+        /**  验证root元素存在  **/
+
+        functions.setIsWithRoot(() -> true);
+        List<LinkedHashMap> withRootResults = HierarchyUtils.getHierarchyResult(
                 menuList,
                 functions,
                 comparator
         );
 
-        System.out.println(JSONObject.toJSONString(matchResults));
+        //结果size为1(只包含root元素,子元素被包含在root中)
+        Assert.assertEquals(1, withRootResults.size());
 
-``` 
+        //存在id为rootId的元素
+        Assert.assertEquals(1, withRootResults.stream().filter(it -> Objects.equals(it.get("id"), rootId)).count());
+
+
+        /**  验证转换前和转换后的json内容一致  **/
+
+        //设置转换函数
+        functions.setTransferFunction(data -> new LinkedHashMap(data));
+
+        functions.setIsEnableTransfer(() -> false);
+        List<LinkedHashMap> beforeTransferResults = HierarchyUtils.getHierarchyResult(
+                menuList,
+                functions,
+                comparator
+        );
+
+        functions.setIsEnableTransfer(() -> true);
+        List<LinkedHashMap> afterTransferResults = HierarchyUtils.getHierarchyResult(
+                menuList,
+                functions,
+                comparator
+        );
+
+        Assert.assertEquals("结果不一致", JSONObject.toJSONString(beforeTransferResults), JSONObject.toJSONString(afterTransferResults));
+    }
+
+}
