@@ -61,7 +61,7 @@ public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
      */
     @Test
     public void testWithMenu() {
-        
+
         Integer rootId = 1;
 
         HierarchyFlatUtils.HierarchyFlatFunctions<Menu, Integer, LinkedHashMap> functions = new HierarchyFlatUtils.HierarchyFlatFunctions<>();
@@ -74,6 +74,12 @@ public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
 
         //验证是否为root pid
         functions.setIsRootPidFunction(pid -> Objects.equals(rootId, pid));
+
+        //设置返回全部的子元素
+        functions.setIsWithAllChildren(() -> true);
+
+        //设置开启转换
+        functions.setIsEnableTransfer(() -> true);
 
         //转换
         functions.setTransferFunction(menu -> {
@@ -133,5 +139,69 @@ public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
                         .map(it -> it.getId()).collect(Collectors.toSet()),
                 withOutRootAndWithoutAllChildrenResults.stream()
                         .map(it -> (Integer) it.get("id")).collect(Collectors.toSet()));
+
+
+
+        /** 验证数据源为null/空 **/
+        Assert.assertNotNull(HierarchyFlatUtils.getHierarchyFlatResult(null, functions
+                , null));
+        Assert.assertEquals(true, HierarchyFlatUtils.getHierarchyFlatResult(null, functions
+                , null).isEmpty());
+
+        Assert.assertEquals(true, HierarchyFlatUtils.getHierarchyFlatResult(new ArrayList<>(), functions
+                , null) != null);
+        Assert.assertEquals(true, HierarchyFlatUtils.getHierarchyFlatResult(new ArrayList<>(), functions
+                , null).isEmpty());
+
+        /** 验证数据源和comparator **/
+        Assert.assertNotNull(HierarchyFlatUtils.getHierarchyFlatResult(new ArrayList<>(), functions
+                , comparator));
+        Assert.assertNotNull(HierarchyFlatUtils.getHierarchyFlatResult(menuList, functions
+                , null));
+
+    }
+
+
+    @Test(expected = NullPointerException.class)
+    public void testFunctionsNull() {
+        HierarchyFlatUtils.getHierarchyFlatResult(null, null
+                , null);
+    }
+
+    @Test
+    public void testWithGetChildrenFunction() {
+        Integer rootId = 1;
+        HierarchyFlatUtils.HierarchyFlatFunctions<Menu, Integer, Menu> functions = MenuResolver.getFlatFunctions(rootId);
+        Comparator<Menu> comparator = MenuResolver.getComparator();
+
+        //设置过滤条件
+        functions.setFilterPredicate((data) -> true);
+
+        //设置返回全部children
+        functions.setIsWithAllChildren(() -> true);
+
+
+        //获取通过源数据列表处理的结果
+        List<Menu> defaultFlatResults = HierarchyFlatUtils.getHierarchyFlatResult(
+                menuList,
+                functions,
+                comparator
+        );
+
+        //获取通过树形数据处理的结果
+        List<Menu> treeResults = MenuResolver.getResolvedWithChildrenMenuList(rootId);
+
+        //设置获取children
+        functions.setGetChildrenFunction((data) -> data.getChildren());
+
+        List<Menu> flatWithTreeResults = HierarchyFlatUtils.getHierarchyFlatResult(
+                treeResults,
+                functions,
+                comparator
+        );
+
+        //验证结果一致
+        Assert.assertEquals(defaultFlatResults, flatWithTreeResults);
+
     }
 }

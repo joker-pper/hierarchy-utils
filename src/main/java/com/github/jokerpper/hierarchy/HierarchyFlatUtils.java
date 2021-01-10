@@ -56,7 +56,7 @@ public class HierarchyFlatUtils {
 
         /**
          * 是否返回全部相关的子元素
-         * 可选,默认true,(false时只返回pid所对应的子元素)
+         * 可选,默认false,(false时只返回pid所对应的子元素)
          */
         private Supplier<Boolean> isWithAllChildren;
 
@@ -175,7 +175,9 @@ public class HierarchyFlatUtils {
             Objects.requireNonNull(transferFunction, "when enable transfer, transfer function must be not null");
         }
 
-        boolean isWithAllChildren = HierarchyHelper.getBooleanValue(functions.getIsWithAllChildren(), true);
+        //是否返回全部的子元素(未设置时默认false)
+        boolean isWithAllChildren = HierarchyHelper.getBooleanValue(functions.getIsWithAllChildren(), false);
+        //是否返回root元素(未设置时默认false,开启时root元素必须存在)
         boolean isWithRoot = HierarchyHelper.getBooleanValue(functions.getIsWithRoot(), false);
 
         //检查数据是否为空

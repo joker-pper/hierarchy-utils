@@ -4,11 +4,15 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.jokerpper.hierarchy.model.Menu;
 import org.junit.Assert;
+import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class HierarchyUtilsTest extends HierarchyBaseTest {
 
     /**
@@ -56,6 +60,7 @@ public class HierarchyUtilsTest extends HierarchyBaseTest {
         );
 
         System.out.println(JSONObject.toJSONString(defaultResults));
+
 
     }
 
@@ -205,6 +210,54 @@ public class HierarchyUtilsTest extends HierarchyBaseTest {
         );
 
         Assert.assertEquals("结果不一致", JSONObject.toJSONString(beforeTransferResults), JSONObject.toJSONString(afterTransferResults));
+
+        /** 验证数据源为null/空 **/
+        Assert.assertNotNull(HierarchyUtils.getHierarchyResult(null, functions
+                , null));
+        Assert.assertEquals(true, HierarchyUtils.getHierarchyResult(null, functions
+                , null).isEmpty());
+
+        Assert.assertEquals(true, HierarchyUtils.getHierarchyResult(new ArrayList<>(), functions
+                , null) != null);
+        Assert.assertEquals(true, HierarchyUtils.getHierarchyResult(new ArrayList<>(), functions
+                , null).isEmpty());
+
+        /** 验证数据源和comparator **/
+        Assert.assertNotNull(HierarchyUtils.getHierarchyResult(new ArrayList<>(), functions
+                , comparator));
+        Assert.assertNotNull(HierarchyUtils.getHierarchyResult(menuList, functions
+                , null));
     }
+
+    @Test(expected = NullPointerException.class)
+    public void testFunctionsNull() {
+        HierarchyUtils.getHierarchyResult(null, null
+                , null);
+    }
+
+    @Test
+    public void testWithGetChildrenFunction() {
+
+        HierarchyUtils.HierarchyFunctions<Menu, Integer, Menu> functions = MenuResolver.getFunctions(-1);
+        Comparator<Menu> comparator = MenuResolver.getComparator();
+
+        //通过源数据列表处理的结果
+        List<Menu> defaultResults = HierarchyUtils.getHierarchyResult(menuList, functions, comparator);
+        String defaultResultsText = JSONObject.toJSONString(defaultResults);
+
+        //设置获取children
+        functions.setGetChildrenFunction((data) -> data.getChildren());
+
+        //获取通过树形数据处理的结果
+        List<Menu> withGetChildrenResults = HierarchyUtils.getHierarchyResult(
+                JSONObject.parseArray(defaultResultsText, Menu.class),
+                functions,
+                comparator
+        );
+
+        //验证结果一致
+        Assert.assertEquals(defaultResults, withGetChildrenResults);
+    }
+
 
 }
