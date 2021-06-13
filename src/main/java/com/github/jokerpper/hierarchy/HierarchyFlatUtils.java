@@ -10,6 +10,10 @@ import java.util.function.Supplier;
  */
 public class HierarchyFlatUtils {
 
+    //Suppresses default constructor, Don't let anyone instantiate this class.
+    private HierarchyFlatUtils() {
+    }
+
     public static class HierarchyFlatFunctions<T, V, R> {
 
         /**

@@ -14,6 +14,10 @@ import java.util.function.Supplier;
  */
 public class HierarchyHelper {
 
+    //Suppresses default constructor, Don't let anyone instantiate this class.
+    private HierarchyHelper() {
+    }
+
     /**
      * 将sourceList中的所有元素(包含子元素)全部放入allSourceList中
      *

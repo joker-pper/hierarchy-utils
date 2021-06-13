@@ -11,6 +11,9 @@ import java.util.function.Supplier;
  */
 public class HierarchyUtils {
 
+    //Suppresses default constructor, Don't let anyone instantiate this class.
+    private HierarchyUtils() {
+    }
 
     public static class HierarchyFunctions<T, V, R> {
 
