@@ -1,9 +1,6 @@
 package com.github.jokerpper.hierarchy;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -19,59 +16,140 @@ public class HierarchyHelper {
     }
 
     /**
-     * 将sourceList中的所有元素(包含子元素)全部放入allSourceList中
+     * 获取新list
+     *
+     * @param sourceList
+     * @param <T>
+     * @return
+     */
+    static <T> List getNewList(final Collection<T> sourceList) {
+        List<T> resultList = new ArrayList<>(sourceList);
+        return resultList;
+    }
+
+
+    /**
+     * 通过sourceList、获取children函数和过滤条件获取匹配的结果列表
+     *
+     * @param sourceList          源数据列表
+     * @param getChildrenFunction 获取children函数,可选
+     * @param filterPredicate     过滤条件,可选
+     * @param <T>
+     * @return
+     */
+    static <T> List<T> getApplySourceList(final List<T> sourceList, final Function<T, List<T>> getChildrenFunction, final Predicate<T> filterPredicate) {
+        final List<T> applySourceList;
+        boolean hasGetChildrenFunction = getChildrenFunction != null;
+        if (hasGetChildrenFunction) {
+            if (filterPredicate != null) {
+                applySourceList = getApplySourceListWithChildrenAndPredicate(sourceList, getChildrenFunction, filterPredicate);
+            } else {
+                applySourceList = getApplySourceListWithChildren(sourceList, getChildrenFunction);
+            }
+        } else {
+            if (filterPredicate != null) {
+                applySourceList = getApplySourceListWithPredicate(sourceList, filterPredicate);
+            } else {
+                applySourceList = getNewList(sourceList);
+            }
+        }
+        return applySourceList;
+    }
+
+
+    /**
+     * 通过sourceList和过滤条件获取匹配的结果列表
      *
      * @param sourceList      源数据列表
-     * @param allSourceList   全部数据列表
      * @param filterPredicate 过滤条件
      * @param <T>
      */
-    static <T> void resolveToAllSourceListWithPredicate(final List<T> sourceList, final List<T> allSourceList
-            , final Predicate<T> filterPredicate) {
+    static <T> List<T> getApplySourceListWithPredicate(final List<T> sourceList, final Predicate<T> filterPredicate) {
+        int size = sourceList.size();
+        int capacity = (int) (size * 0.8);
+        capacity = capacity > 16 ? capacity : 16;
+        final List<T> applySourceList = new ArrayList<>(capacity);
         for (T source : sourceList) {
             if (filterPredicate.test(source)) {
-                allSourceList.add(source);
+                applySourceList.add(source);
             }
         }
+        return applySourceList;
     }
 
     /**
-     * 将sourceList中的所有元素(包含子元素)全部放入allSourceList中
+     * 通过sourceList和获取children函数获取匹配的结果列表
      *
      * @param sourceList          源数据列表
-     * @param allSourceList       全部数据列表
+     * @param getChildrenFunction 获取children函数
+     * @param <T>
+     * @return
+     */
+    static <T> List<T> getApplySourceListWithChildren(final List<T> sourceList, final Function<T, List<T>> getChildrenFunction) {
+        int size = sourceList.size();
+        int capacity = (int) (size * 1.8);
+        capacity = capacity > 256 ? capacity : 256;
+        final List<T> resultList = new ArrayList<>(capacity);
+        resolveSourceList(sourceList, resultList, getChildrenFunction);
+        return resultList;
+    }
+
+    /**
+     * 通过sourceList、获取children函数和过滤条件获取匹配的结果列表
+     *
+     * @param sourceList          源数据列表
+     * @param getChildrenFunction 获取children函数
+     * @param filterPredicate     过滤条件
+     * @param <T>
+     * @return
+     */
+    static <T> List<T> getApplySourceListWithChildrenAndPredicate(final List<T> sourceList
+            , final Function<T, List<T>> getChildrenFunction, final Predicate<T> filterPredicate) {
+        int size = sourceList.size();
+        int capacity = (int) (size * 1.8);
+        capacity = capacity > 256 ? capacity : 256;
+        final List<T> resultList = new ArrayList<>(capacity);
+        resolveSourceListWithPredicate(sourceList, resultList, getChildrenFunction, filterPredicate);
+        return resultList;
+    }
+
+    /**
+     * 将sourceList中的所有元素(包含子元素)全部放入结果数据列表中
+     *
+     * @param sourceList          源数据列表
+     * @param resultList          结果数据列表
      * @param getChildrenFunction 获取children函数
      * @param <T>
      */
-    static <T> void resolveToAllSourceList(final List<T> sourceList, final List<T> allSourceList
+    private static <T> void resolveSourceList(final List<T> sourceList, final List<T> resultList
             , final Function<T, List<T>> getChildrenFunction) {
         for (T source : sourceList) {
-            allSourceList.add(source);
-            List<T> sourceChildrenList = resolveGetChildren(getChildrenFunction, source);
+            resultList.add(source);
+            List<T> sourceChildrenList = resolveAndGetChildren(getChildrenFunction, source);
             if (sourceChildrenList != null && !sourceChildrenList.isEmpty()) {
-                resolveToAllSourceList(sourceChildrenList, allSourceList, getChildrenFunction);
+                resolveSourceList(sourceChildrenList, resultList, getChildrenFunction);
             }
         }
     }
 
     /**
-     * 将sourceList中的所有元素(包含子元素)全部放入allSourceList中
+     * 将sourceList中的所有元素(包含子元素)全部放入结果数据列表中
      *
      * @param sourceList          源数据列表
-     * @param allSourceList       全部数据列表
+     * @param resultList          结果数据列表
      * @param getChildrenFunction 获取children函数
      * @param filterPredicate     过滤条件
      * @param <T>
      */
-    static <T> void resolveToAllSourceListWithPredicate(final List<T> sourceList, final List<T> allSourceList
+    private static <T> void resolveSourceListWithPredicate(final List<T> sourceList, final List<T> resultList
             , final Function<T, List<T>> getChildrenFunction, final Predicate<T> filterPredicate) {
         for (T source : sourceList) {
             if (filterPredicate.test(source)) {
-                allSourceList.add(source);
+                resultList.add(source);
             }
-            List<T> sourceChildrenList = resolveGetChildren(getChildrenFunction, source);
+            List<T> sourceChildrenList = resolveAndGetChildren(getChildrenFunction, source);
             if (sourceChildrenList != null && !sourceChildrenList.isEmpty()) {
-                resolveToAllSourceListWithPredicate(sourceChildrenList, allSourceList, getChildrenFunction, filterPredicate);
+                resolveSourceListWithPredicate(sourceChildrenList, resultList, getChildrenFunction, filterPredicate);
             }
         }
     }
@@ -84,10 +162,9 @@ public class HierarchyHelper {
      * @param <T>
      * @return
      */
-    static <T> List<T> resolveGetChildren(final Function<T, List<T>> getChildrenFunction, final T source) {
+    static <T> List<T> resolveAndGetChildren(final Function<T, List<T>> getChildrenFunction, final T source) {
         return getChildrenFunction.apply(source);
     }
-
 
     /**
      * 设置当前元素的子元素
@@ -97,7 +174,7 @@ public class HierarchyHelper {
      * @param children
      * @param <T>
      */
-    static <T> void resolveSetChildren(final BiConsumer<T, List<T>> setChildrenFunction, final T source, final List<T> children) {
+    static <T> void resolveAndSetChildren(final BiConsumer<T, List<T>> setChildrenFunction, final T source, final List<T> children) {
         setChildrenFunction.accept(source, children);
     }
 
@@ -114,7 +191,6 @@ public class HierarchyHelper {
         return transferFunction.apply(source);
     }
 
-
     /**
      * 获取元素id所对应的子元素(但不包含root pid)
      *
@@ -129,7 +205,7 @@ public class HierarchyHelper {
             , final Function<T, V> getPidFunction
             , final Function<V, Boolean> isRootPidFunction) {
 
-        Map<V, List<T>> resultMap = new HashMap<>(32);
+        Map<V, List<T>> resultMap = new HashMap<>(toResolveSourceList.size());
         for (T toResolveSource : toResolveSourceList) {
             //获取pid
             V pid = getPidFunction.apply(toResolveSource);

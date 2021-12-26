@@ -1,11 +1,9 @@
 package com.github.jokerpper.hierarchy;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.jokerpper.hierarchy.model.Menu;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
@@ -14,119 +12,6 @@ import java.util.stream.Collectors;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class HierarchyUtilsTest extends HierarchyBaseTest {
-
-    /**
-     * 场景一: 通过原数据结构返回树形数据
-     */
-    @Test
-    public void t1() {
-        //默认根元素为-1 (当前所有一级菜单的pid为-1,可根据实际定义根元素使用)
-        Integer rootId = -1;
-
-        //排序(需注意业务属性值是否为空),可选
-        Comparator<Menu> comparator = new Comparator<Menu>() {
-            @Override
-            public int compare(Menu o1, Menu o2) {
-                return Integer.compare(o1.getSort(), o2.getSort());
-            }
-        };
-
-        HierarchyUtils.HierarchyFunctions<Menu, Integer, Menu> defaultFunctions = new HierarchyUtils.HierarchyFunctions<>();
-
-        //获取pid
-        defaultFunctions.setGetPidFunction(data -> data.getPid());
-
-        //获取id
-        defaultFunctions.setGetIdFunction(data -> data.getId());
-
-        //验证是否为root pid
-        defaultFunctions.setIsRootPidFunction(pid -> Objects.equals(rootId, pid));
-
-        //设置children
-        defaultFunctions.setSetChildrenFunction((parent, children) -> {
-            parent.setChildren(children);
-        });
-
-        //是否返回root元素(未设置时默认false,开启时root元素必须存在)
-        defaultFunctions.setIsWithRoot(() -> false);
-
-        //过滤条件(可选,用来筛选数据)
-        defaultFunctions.setFilterPredicate(menu -> true);
-
-        List<Menu> defaultResults = HierarchyUtils.getHierarchyResult(
-                menuList,
-                defaultFunctions,
-                comparator
-        );
-
-        System.out.println(JSONObject.toJSONString(defaultResults));
-
-
-    }
-
-
-    /**
-     * 场景二: 原数据结构未定义children,通过转换数据结构返回树形数据
-     */
-    @Test
-    public void t2() {
-        //默认根元素为-1 (当前所有一级菜单的pid为-1,可根据实际定义根元素使用)
-        Integer rootId = -1;
-
-        //排序(需注意业务属性值是否为空),可选
-        Comparator<Menu> comparator = new Comparator<Menu>() {
-            @Override
-            public int compare(Menu o1, Menu o2) {
-                return Integer.compare(o1.getSort(), o2.getSort());
-            }
-        };
-
-        HierarchyUtils.HierarchyFunctions<Menu, Integer, JSONObject> transferFunctions = new HierarchyUtils.HierarchyFunctions<>();
-
-        //获取pid
-        transferFunctions.setGetPidFunction(data -> data.getPid());
-
-        //获取id
-        transferFunctions.setGetIdFunction(data -> data.getId());
-
-        //验证是否为root pid
-        transferFunctions.setIsRootPidFunction(pid -> Objects.equals(rootId, pid));
-
-        //设置转换函数
-        transferFunctions.setTransferFunction(menu -> {
-            //转换数据
-            JSONObject result = (JSONObject) JSON.toJSON(menu);
-
-            //可定义或移除属性
-            result.put("title", menu.getName());
-            result.put("order", menu.getSort());
-
-            result.put("newName", menu.getName());
-            result.remove("name");
-
-            return result;
-        });
-
-        //设置children
-        transferFunctions.setSetChildrenFunction((parent, children) -> {
-            parent.put("children", children);
-        });
-
-        //是否返回root元素(未设置时默认false,开启时root元素必须存在)
-        transferFunctions.setIsWithRoot(() -> false);
-
-        //过滤条件(可选,用来筛选数据)
-        transferFunctions.setFilterPredicate(menu -> true);
-
-        List<JSONObject> transferResults = HierarchyUtils.getHierarchyResult(
-                menuList,
-                transferFunctions,
-                comparator
-        );
-
-        System.out.println(JSONObject.toJSONString(transferResults));
-
-    }
 
     /**
      * simple test
@@ -237,6 +122,7 @@ public class HierarchyUtilsTest extends HierarchyBaseTest {
 
     @Test
     public void testWithGetChildrenFunction() {
+        List<Menu> menuList = getSourceMenuList();
 
         HierarchyUtils.HierarchyFunctions<Menu, Integer, Menu> functions = MenuResolver.getFunctions(-1);
         Comparator<Menu> comparator = MenuResolver.getComparator();

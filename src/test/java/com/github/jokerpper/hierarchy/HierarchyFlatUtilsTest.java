@@ -1,6 +1,5 @@
 package com.github.jokerpper.hierarchy;
 
-import com.alibaba.fastjson.JSONObject;
 import com.github.jokerpper.hierarchy.model.Menu;
 import org.junit.Assert;
 import org.junit.Test;
@@ -11,56 +10,11 @@ import java.util.stream.Collectors;
 public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
 
     /**
-     * 场景: 返回源数据列表中id为rootId的元素或pid为rootId且id能整除2的全部子元素的数据列表
-     */
-    @Test
-    public void t() {
-
-        Integer rootId = 1;
-
-        HierarchyFlatUtils.HierarchyFlatFunctions<Menu, Integer, Menu> functions = new HierarchyFlatUtils.HierarchyFlatFunctions<>();
-
-        //获取pid
-        functions.setGetPidFunction(data -> data.getPid());
-
-        //获取id
-        functions.setGetIdFunction(data -> data.getId());
-
-        //验证是否为root pid
-        functions.setIsRootPidFunction(pid -> Objects.equals(rootId, pid));
-
-        //是否返回root元素(未设置时默认false,开启时root元素必须存在)
-        functions.setIsWithRoot(() -> true);
-
-        //是否返回全部的子元素(未设置时默认false,即默认只返回root元素的直接子元素)
-        functions.setIsWithAllChildren(() -> true);
-
-        //过滤条件(可选,用来筛选数据)
-        functions.setFilterPredicate(menu -> menu.getId() % 2 == 0 || Objects.equals(rootId, menu.getId()));
-
-        //排序(需注意业务属性值是否为空),可选
-        Comparator<Menu> comparator = new Comparator<Menu>() {
-            @Override
-            public int compare(Menu o1, Menu o2) {
-                return Integer.compare(o1.getSort(), o2.getSort());
-            }
-        };
-
-        List<Menu> matchResults = HierarchyFlatUtils.getHierarchyFlatResult(
-                menuList,
-                functions,
-                comparator
-        );
-
-        System.out.println(JSONObject.toJSONString(matchResults));
-
-    }
-
-    /**
      * simple test
      */
     @Test
     public void testWithMenu() {
+        List<Menu> menuList = getSourceMenuList();
 
         Integer rootId = 1;
 
@@ -141,7 +95,6 @@ public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
                         .map(it -> (Integer) it.get("id")).collect(Collectors.toSet()));
 
 
-
         /** 验证数据源为null/空 **/
         Assert.assertNotNull(HierarchyFlatUtils.getHierarchyFlatResult(null, functions
                 , null));
@@ -170,6 +123,8 @@ public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
 
     @Test
     public void testWithGetChildrenFunction() {
+        List<Menu> menuList = getSourceMenuList();
+
         Integer rootId = 1;
         HierarchyFlatUtils.HierarchyFlatFunctions<Menu, Integer, Menu> functions = MenuResolver.getFlatFunctions(rootId);
         Comparator<Menu> comparator = MenuResolver.getComparator();
@@ -179,7 +134,6 @@ public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
 
         //设置返回全部children
         functions.setIsWithAllChildren(() -> true);
-
 
         //获取通过源数据列表处理的结果
         List<Menu> defaultFlatResults = HierarchyFlatUtils.getHierarchyFlatResult(
@@ -200,8 +154,8 @@ public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
                 comparator
         );
 
-        //验证结果一致
-        Assert.assertEquals(defaultFlatResults, flatWithTreeResults);
+        //验证结果一致(不考虑children存在的情况)
+        Assert.assertEquals(defaultFlatResults.stream().map(Menu::getId).collect(Collectors.toList()), flatWithTreeResults.stream().map(Menu::getId).collect(Collectors.toList()));
 
     }
 }

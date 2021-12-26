@@ -148,14 +148,36 @@ public class HierarchyUtils {
 
     /**
      * 将源数据列表转换为树形结构
+     * <p>
+     * 若对结果有排序需要,可通过 HierarchySortUtils 进行排序
+     * <p>
      *
-     * @param sourceList 源数据列表
+     * @param sourceList
      * @param functions
-     * @param comparator 可选 (若数据源已有序且无过滤条件则无需再次排序)
      * @param <T>
      * @param <R>
      * @param <V>
      * @return
+     * @see HierarchySortUtils
+     */
+    public static <T, R, V> List<R> getHierarchyResult(final List<T> sourceList, final HierarchyFunctions<T, V, R> functions) {
+        return getHierarchyResult(sourceList, functions, null);
+    }
+
+    /**
+     * 将源数据列表转换为树形结构
+     * <p>
+     * 若对结果有排序需要,可通过 HierarchySortUtils 进行排序
+     * <p>
+     *
+     * @param sourceList 源数据列表
+     * @param functions
+     * @param comparator 可选 存在时会对筛选后的源数据列表进行排序
+     * @param <T>
+     * @param <R>
+     * @param <V>
+     * @return
+     * @see HierarchySortUtils
      */
     public static <T, R, V> List<R> getHierarchyResult(final List<T> sourceList, final HierarchyFunctions<T, V, R> functions, final Comparator<? super T> comparator) {
         //检查参数
@@ -168,7 +190,6 @@ public class HierarchyUtils {
         Function<T, R> transferFunction = functions.getTransferFunction();
         BiConsumer<R, List<R>> setChildrenFunction = functions.getSetChildrenFunction();
         Predicate<T> filterPredicate = functions.getFilterPredicate();
-
 
         Objects.requireNonNull(isRootPidFunction, "is root pid function must be not null");
         Objects.requireNonNull(getPidFunction, "get pid function must be not null");
@@ -188,24 +209,8 @@ public class HierarchyUtils {
             return Collections.emptyList();
         }
 
-        //获取当前全部元素
-        final List<T> allSourceList = new ArrayList<>(64);
-        boolean hasGetChildrenFunction = getChildrenFunction != null;
-        if (hasGetChildrenFunction) {
-            if (filterPredicate != null) {
-                HierarchyHelper.resolveToAllSourceListWithPredicate(sourceList, allSourceList, getChildrenFunction, filterPredicate);
-            } else {
-                HierarchyHelper.resolveToAllSourceList(sourceList, allSourceList, getChildrenFunction);
-            }
-        } else {
-            if (filterPredicate != null) {
-                HierarchyHelper.resolveToAllSourceListWithPredicate(sourceList, allSourceList, filterPredicate);
-            } else {
-                allSourceList.addAll(sourceList);
-            }
-        }
-
-        final List<T> toResolveSourceList = allSourceList;
+        //获取当前要处理的元素列表
+        final List<T> toResolveSourceList = HierarchyHelper.getApplySourceList(sourceList, getChildrenFunction, filterPredicate);
         //进行排序数据列表
         if (comparator != null && toResolveSourceList.size() > 1) {
             Collections.sort(toResolveSourceList, comparator);
@@ -213,7 +218,7 @@ public class HierarchyUtils {
 
         //处理数据
         List<R> rootList = isWithRoot ? new ArrayList<>(2) : null;
-        List<R> results = new ArrayList<>(32);
+        List<R> results = new ArrayList<>(1024);
 
         //获取元素id所对应的子元素(但不包含root pid)
         Map<V, List<T>> toResolveSourceIdChildrenMap = HierarchyHelper.initAndGetIdChildrenResultMap(toResolveSourceList, getPidFunction, isRootPidFunction);
@@ -245,7 +250,7 @@ public class HierarchyUtils {
         HierarchyHelper.checkRootList(rootList);
 
         //设置root子元素
-        HierarchyHelper.resolveSetChildren(setChildrenFunction, rootList.get(0), results);
+        HierarchyHelper.resolveAndSetChildren(setChildrenFunction, rootList.get(0), results);
 
         return rootList;
     }
@@ -266,6 +271,7 @@ public class HierarchyUtils {
      * @param <R>
      * @param <V>
      */
+
     private static <T, R, V> void resolveHierarchyWithoutEnableTransfer(final List<R> results, final T toResolveSource
             , final Map<V, List<T>> toResolveSourceIdChildrenMap, final List<R> rootList
             , final Function<V, Boolean> isRootPidFunction, final Function<T, V> getPidFunction
@@ -287,7 +293,7 @@ public class HierarchyUtils {
         //获取当前元素的子元素列表
         List<R> transferChildrenList = (List<R>) toResolveSourceIdChildrenMap.get(id);
         //处理children
-        HierarchyHelper.resolveSetChildren(setChildrenFunction, transferResult, transferChildrenList);
+        HierarchyHelper.resolveAndSetChildren(setChildrenFunction, transferResult, transferChildrenList);
     }
 
     /**
@@ -307,6 +313,7 @@ public class HierarchyUtils {
      * @param <R>
      * @param <V>
      */
+
     private static <T, R, V> void resolveHierarchyWithEnableTransfer(final List<R> results, final T toResolveSource, final R transferResult
             , final Map<V, List<T>> toResolveSourceIdChildrenMap, final List<R> rootList
             , final Function<V, Boolean> isRootPidFunction, final Function<T, V> getPidFunction
@@ -334,29 +341,31 @@ public class HierarchyUtils {
 
     }
 
+
     private static <T, R, V> void resolveWithChildren(final Map<V, List<T>> toResolveSourceIdChildrenMap
             , final Function<T, V> getIdFunction
             , final Function<T, R> transferFunction
             , final BiConsumer<R, List<R>> setChildrenFunction
             , final R transferResult, final V id) {
         List<T> currentSourceChildrenList = toResolveSourceIdChildrenMap.get(id);
-        List<R> transferChildrenList = null;
-        if (currentSourceChildrenList != null && !currentSourceChildrenList.isEmpty()) {
-            transferChildrenList = new ArrayList<>(currentSourceChildrenList.size());
-            for (T currentSourceChild : currentSourceChildrenList) {
-                R transferChildResult = HierarchyHelper.getTransferResult(transferFunction, currentSourceChild);
 
-                //处理各子元素的子元素
-                resolveWithChildren(toResolveSourceIdChildrenMap
-                        , getIdFunction, transferFunction
-                        , setChildrenFunction
-                        , transferChildResult, getIdFunction.apply(currentSourceChild));
+        if (currentSourceChildrenList == null || currentSourceChildrenList.isEmpty()) {
+            return;
+        }
 
-                transferChildrenList.add(transferChildResult);
-            }
+        List<R> transferChildrenList = new ArrayList<>(currentSourceChildrenList.size());
+        for (T currentSourceChild : currentSourceChildrenList) {
+            R transferChildResult = HierarchyHelper.getTransferResult(transferFunction, currentSourceChild);
+            //处理各子元素的子元素
+            resolveWithChildren(toResolveSourceIdChildrenMap
+                    , getIdFunction, transferFunction
+                    , setChildrenFunction
+                    , transferChildResult, getIdFunction.apply(currentSourceChild));
+
+            transferChildrenList.add(transferChildResult);
         }
         //处理children
-        HierarchyHelper.resolveSetChildren(setChildrenFunction, transferResult, transferChildrenList);
+        HierarchyHelper.resolveAndSetChildren(setChildrenFunction, transferResult, transferChildrenList);
     }
 
 }

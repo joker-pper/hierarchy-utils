@@ -1,35 +1,33 @@
-# hierarchy-utils
-    用于构建/查找具有层级关系树形数据的工具库,以解决业务中常见的树形数据处理需求
-    支持自定义过滤数据、排序及转换数据等
+package com.github.jokerpper.hierarchy;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.github.jokerpper.hierarchy.model.Menu;
+import com.github.jokerpper.hierarchy.support.HierarchyValidateHelper;
+import org.junit.Before;
+import org.junit.Test;
 
-## 使用示例
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Random;
 
+public class HierarchySamplesTest {
 
-### 数据结构 - 菜单
+    private List<Menu> menuList;
 
-``` 
-@Data
-public class Menu {
-    private Integer id;
-    private String name;
-    private Integer pid;
-    private Integer sort;
-    private List<Menu> children;
-}
-``` 
+    @Before
+    public void setUp() throws Exception {
+        //查询当前用户的菜单列表(可模拟数据)
+        //menuList = menuService.findAllByUserId(1);
+        menuList = JSONObject.parseArray(HierarchyDataSource.MENU_TEXT, Menu.class);
+    }
 
-### 数据源
-
-        //查询当前用户的菜单列表
-        List<Menu> menuList = menuService.findAllByUserId();
-        //通过json转换
-        List<Menu> menuList = JSONObject.parseArray(menuText, Menu.class);;
-
-
-### 1.通过原数据结构返回树形数据
-
-``` 
+    /**
+     * 场景一: 通过原数据结构返回树形数据
+     */
+    @Test
+    public void hierarchyResultByDefault() {
         //默认根元素为-1 (当前所有一级菜单的pid为-1,可根据实际定义根元素使用)
         Integer rootId = -1;
 
@@ -40,6 +38,15 @@ public class Menu {
                 return Integer.compare(o1.getSort(), o2.getSort());
             }
         };
+
+        if (new Random().nextBoolean()) {
+            comparator = new Comparator<Menu>() {
+                @Override
+                public int compare(Menu o1, Menu o2) {
+                    return Integer.compare(o1.getId(), o2.getId());
+                }
+            };
+        }
 
         HierarchyUtils.HierarchyFunctions<Menu, Integer, Menu> defaultFunctions = new HierarchyUtils.HierarchyFunctions<>();
 
@@ -71,12 +78,15 @@ public class Menu {
 
         System.out.println(JSONObject.toJSONString(defaultResults));
 
-``` 
+        //验证是否为期望的排序结果(忽略,用于test验证输出结果是否正确)
+        HierarchyValidateHelper.assertSameSortedResult(defaultResults, comparator);
+    }
 
-### 2.原数据结构未定义children,通过转换数据结构返回树形数据
-
-``` 
-    
+    /**
+     * 场景二: 原数据结构未定义children,通过转换数据结构返回树形数据
+     */
+    @Test
+    public void hierarchyResultByTransfer() {
         //默认根元素为-1 (当前所有一级菜单的pid为-1,可根据实际定义根元素使用)
         Integer rootId = -1;
 
@@ -133,12 +143,14 @@ public class Menu {
 
         System.out.println(JSONObject.toJSONString(transferResults));
 
-        
-``` 
-### 3.返回源数据列表中id为rootId的元素或pid为rootId且id能整除2的全部子元素的数据列表
+    }
 
-``` 
 
+    /**
+     * 场景三: 返回源数据列表中id为rootId的元素或pid为rootId且id能整除2的全部子元素的数据列表
+     */
+    @Test
+    public void hierarchyFlatResult() {
         Integer rootId = 1;
 
         HierarchyFlatUtils.HierarchyFlatFunctions<Menu, Integer, Menu> functions = new HierarchyFlatUtils.HierarchyFlatFunctions<>();
@@ -180,15 +192,8 @@ public class Menu {
 
         System.out.println(JSONObject.toJSONString(matchResults));
 
-``` 
+        //验证是否为期望的排序结果(忽略,用于test验证输出结果是否正确)
+        HierarchyValidateHelper.assertSameSortedResult(matchResults, comparator);
+    }
 
-### 对返回结果list排序
-
-``` 
-    //对返回结果排序
-    HierarchySortUtils.sort(list, comparator); 
-        
-    //对返回结果及子元素排序
-    HierarchySortUtils.sortWithChildren(list, childrenFunction, comparator);  
-
-``` 
+}

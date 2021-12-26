@@ -1,9 +1,11 @@
 package com.github.jokerpper.hierarchy;
 
 import com.alibaba.fastjson.JSONObject;
+import com.github.jokerpper.hierarchy.HierarchyDataSource;
+import com.github.jokerpper.hierarchy.HierarchyFlatUtils;
+import com.github.jokerpper.hierarchy.HierarchyUtils;
 import com.github.jokerpper.hierarchy.model.Menu;
 import org.junit.After;
-import org.junit.Before;
 
 import java.util.Comparator;
 import java.util.List;
@@ -11,23 +13,10 @@ import java.util.Objects;
 
 public abstract class HierarchyBaseTest {
 
-    protected String menuText = "[" +
-            "{'id': 1, name: '父级', 'pid': -1, 'sort': 1}, " +
-            "{'id': 2, name: '子级', 'pid' : 1, 'sort': 99}" +
-            "{'id': 3, name: '子级', 'pid' : 2, 'sort': 1}," +
-            "{'id': 4, name: '子级', 'pid' : 2, 'sort': 22}," +
-            "{'id': 5, name: '子级', 'pid' : 2, 'sort': 5}," +
-            "{'id': 6, name: '子级', 'pid' : 1, 'sort': 98}" +
-            "{'id': 7, name: '子级', 'pid' : 1, 'sort': 92}" +
-            "]";
+    protected static String menuText = HierarchyDataSource.MENU_TEXT;
 
-    protected static List<Menu> menuList;
-
-    @Before
-    public void setUp() throws Exception {
-        //查询当前用户的菜单列表(可模拟数据)
-        //menuList = menuService.findAllByUserId(1);
-        menuList = JSONObject.parseArray(menuText, Menu.class);
+    protected static List<Menu> getSourceMenuList() {
+       return JSONObject.parseArray(menuText, Menu.class);
     }
 
     @After
@@ -39,6 +28,7 @@ public abstract class HierarchyBaseTest {
 
         /**
          * 获取menu base comparator
+         *
          * @return
          */
         static Comparator<Menu> getComparator() {
@@ -52,6 +42,7 @@ public abstract class HierarchyBaseTest {
 
         /**
          * 获取menu base functions
+         *
          * @param rootId
          * @return
          */
@@ -77,6 +68,7 @@ public abstract class HierarchyBaseTest {
 
         /**
          * 获取menu base flat functions
+         *
          * @param rootId
          * @return
          */
@@ -96,11 +88,12 @@ public abstract class HierarchyBaseTest {
 
         /**
          * 获取处理过的树形数据
+         *
          * @param pid
          * @return
          */
         static List<Menu> getResolvedWithChildrenMenuList(Integer pid) {
-            return HierarchyUtils.getHierarchyResult(menuList, getFunctions(pid), getComparator());
+            return HierarchyUtils.getHierarchyResult(getSourceMenuList(), getFunctions(pid), getComparator());
         }
 
     }

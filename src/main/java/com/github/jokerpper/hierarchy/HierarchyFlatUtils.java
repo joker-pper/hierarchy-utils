@@ -145,21 +145,51 @@ public class HierarchyFlatUtils {
 
     /**
      * 将源数据列表中相关符合的数据列表进行返回 (同时支持树形数据的元素)
-     *
+     * <p>
      * 若开启返回root元素,则root元素默认为第一个元素
-     * 设置返回全部子元素仅未转换数据类型支持子元素进行排序
+     * 若有设置返回全部子元素时会导致结果乱序
+     * <p>
+     *
+     * <p>
+     * 若对结果有排序需要,可通过 HierarchySortUtils 进行排序
+     * <p>
      *
      * @param sourceList 源数据列表
      * @param functions
-     * @param comparator 可选 (若数据源已有序且无过滤条件则无需再次排序)
      * @param <T>
      * @param <R>
      * @param <V>
      * @return
+     * @see HierarchySortUtils
+     */
+    public static <T, R, V> List<R> getHierarchyFlatResult(final List<T> sourceList,
+                                                           final HierarchyFlatFunctions<T, V, R> functions) {
+        return getHierarchyFlatResult(sourceList, functions, null);
+    }
+
+    /**
+     * 将源数据列表中相关符合的数据列表进行返回 (同时支持树形数据的元素)
+     * <p>
+     * 若开启返回root元素,则root元素默认为第一个元素
+     * 若有设置返回全部子元素时会导致结果乱序
+     * <p>
+     *
+     * <p>
+     * 若对结果有排序需要,可通过 HierarchySortUtils 进行排序
+     * <p>
+     *
+     * @param sourceList 源数据列表
+     * @param functions
+     * @param comparator 可选 存在时会对筛选后的源数据列表进行排序
+     * @param <T>
+     * @param <R>
+     * @param <V>
+     * @return
+     * @see HierarchySortUtils
      */
     public static <T, R, V> List<R> getHierarchyFlatResult(final List<T> sourceList,
                                                            final HierarchyFlatFunctions<T, V, R> functions,
-                                                           final Comparator<? super T> comparator) {
+                                                           final Comparator<T> comparator) {
         //检查参数
         Objects.requireNonNull(functions, "functions must be not null");
         Function<V, Boolean> isRootPidFunction = functions.getIsRootPidFunction();
@@ -188,24 +218,9 @@ public class HierarchyFlatUtils {
         if (sourceList == null || sourceList.isEmpty()) {
             return Collections.emptyList();
         }
-        //获取当前全部元素
-        final List<T> allSourceList = new ArrayList<>(64);
-        boolean hasGetChildrenFunction = getChildrenFunction != null;
-        if (hasGetChildrenFunction) {
-            if (filterPredicate != null) {
-                HierarchyHelper.resolveToAllSourceListWithPredicate(sourceList, allSourceList, getChildrenFunction, filterPredicate);
-            } else {
-                HierarchyHelper.resolveToAllSourceList(sourceList, allSourceList, getChildrenFunction);
-            }
-        } else {
-            if (filterPredicate != null) {
-                HierarchyHelper.resolveToAllSourceListWithPredicate(sourceList, allSourceList, filterPredicate);
-            } else {
-                allSourceList.addAll(sourceList);
-            }
-        }
 
-        final List<T> toResolveSourceList = allSourceList;
+        //获取当前要处理的元素列表
+        final List<T> toResolveSourceList = HierarchyHelper.getApplySourceList(sourceList, getChildrenFunction, filterPredicate);
         //进行排序数据列表
         if (comparator != null && toResolveSourceList.size() > 1) {
             Collections.sort(toResolveSourceList, comparator);
@@ -213,7 +228,7 @@ public class HierarchyFlatUtils {
 
         //处理数据
         List<R> rootList = isWithRoot ? new ArrayList<>(2) : null;
-        List<R> results = new ArrayList<>(64);
+        List<R> results = new ArrayList<>(1024);
         Map<V, List<T>> toResolveSourceIdChildrenMap = HierarchyHelper.initAndGetIdChildrenResultMap(toResolveSourceList, getPidFunction, isRootPidFunction);
 
         if (!isEnableTransfer) {
@@ -222,11 +237,6 @@ public class HierarchyFlatUtils {
                         , toResolveSourceIdChildrenMap, rootList
                         , isRootPidFunction, getPidFunction
                         , getIdFunction, isWithAllChildren);
-            }
-
-            if (isWithAllChildren && comparator != null && results.size() > 1) {
-                //返回全部子元素时且未转换进行排序
-                Collections.sort((List<T>) results, comparator);
             }
         } else {
             for (T toResolveSource : toResolveSourceList) {
