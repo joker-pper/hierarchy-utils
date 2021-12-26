@@ -50,7 +50,7 @@ public class HierarchyUtilsTest extends HierarchyBaseTest {
         );
         Assert.assertEquals(0, defaultResults.stream().filter(it -> Objects.equals(it.get("id"), rootId)).count());
 
-        //所有元素pid都为root pid
+        //所有元素pid都为root id
         Assert.assertEquals(new HashSet<>(Arrays.asList(rootId)), defaultResults.stream()
                 .map(it -> (Integer) it.get("pid")).collect(Collectors.toSet()));
 

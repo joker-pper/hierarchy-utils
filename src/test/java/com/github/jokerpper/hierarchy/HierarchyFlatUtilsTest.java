@@ -5,6 +5,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
@@ -15,6 +16,8 @@ public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
     @Test
     public void testWithMenu() {
         List<Menu> menuList = HierarchyMetadata.getDefaultMenuList();
+
+        Map<Integer, Menu> menuMap = menuList.stream().collect(Collectors.toMap(Menu::getId, Function.identity()));
 
         Integer rootId = 1;
 
@@ -57,6 +60,8 @@ public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
         );
         Assert.assertEquals(0, defaultResults.stream().filter(it -> Objects.equals(it.get("id"), rootId)).count());
 
+        validateRootParentIdIsRootIdByHashMap(rootId, defaultResults, menuMap);
+
 
         /**  验证root元素存在  **/
 
@@ -68,25 +73,31 @@ public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
         );
         Assert.assertEquals(1, withRootResults.stream().filter(it -> Objects.equals(it.get("id"), rootId)).count());
 
+        //验证数据的最上层pid为rootId
+        validateRootParentIdIsRootIdByHashMap(rootId, defaultResults, menuMap);
+
 
         /**  验证设置不包含全部子元素及不包含root元素  **/
         functions.setIsWithAllChildren(() -> false);
         functions.setIsWithRoot(() -> false);
 
-        List<LinkedHashMap> withOutRootAndWithoutAllChildrenResults = HierarchyFlatUtils.getHierarchyFlatResult(
+        List<LinkedHashMap> withoutRootAndWithoutAllChildrenResults = HierarchyFlatUtils.getHierarchyFlatResult(
                 menuList,
                 functions,
                 comparator
         );
 
-        //所有元素pid都为root pid
-        Assert.assertEquals(new HashSet<>(Arrays.asList(rootId)), withOutRootAndWithoutAllChildrenResults.stream()
+        //验证所有元素pid都为root id
+        Assert.assertEquals(new HashSet<>(Arrays.asList(rootId)), withoutRootAndWithoutAllChildrenResults.stream()
                 .map(it -> (Integer) it.get("pid")).collect(Collectors.toSet()));
 
-        //所有元素id与源数据的rootId子元素的id一致
+        //验证数据的最上层pid为rootId
+        validateRootParentIdIsRootIdByHashMap(rootId, defaultResults, menuMap);
+
+        //验证所有元素id与源数据的rootId子元素的id一致
         Assert.assertEquals(menuList.stream().filter(it -> Objects.equals(it.getPid(), rootId))
                         .map(it -> it.getId()).collect(Collectors.toSet()),
-                withOutRootAndWithoutAllChildrenResults.stream()
+                withoutRootAndWithoutAllChildrenResults.stream()
                         .map(it -> (Integer) it.get("id")).collect(Collectors.toSet()));
 
 
@@ -119,6 +130,7 @@ public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
     @Test
     public void testWithGetChildrenFunction() {
         List<Menu> menuList = HierarchyMetadata.getDefaultMenuList();
+        Map<Integer, Menu> menuMap = menuList.stream().collect(Collectors.toMap(Menu::getId, Function.identity()));
 
         Integer rootId = 1;
         HierarchyFlatUtils.HierarchyFlatFunctions<Menu, Integer, Menu> functions = MenuResolver.getFlatFunctions(rootId);
@@ -137,6 +149,9 @@ public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
                 comparator
         );
 
+        //验证数据的最上层pid为rootId
+        validateRootParentIdIsRootId(rootId, defaultFlatResults, menuMap);
+
         //获取通过树形数据处理的结果
         List<Menu> treeResults = MenuResolver.getResolvedWithChildrenMenuList(rootId);
 
@@ -149,8 +164,65 @@ public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
                 comparator
         );
 
+        //验证数据的最上层pid为rootId
+        validateRootParentIdIsRootId(rootId, flatWithTreeResults, menuMap);
+
         //验证结果一致(不考虑children存在的情况)
         Assert.assertEquals(defaultFlatResults.stream().map(Menu::getId).collect(Collectors.toList()), flatWithTreeResults.stream().map(Menu::getId).collect(Collectors.toList()));
+
+    }
+
+
+    /**
+     * 验证数据的最上层pid为rootId
+     *
+     * @param rootId
+     * @param results
+     * @param menuMap
+     */
+    private void validateRootParentIdIsRootId(Integer rootId, List<Menu> results, Map<Integer, Menu> menuMap) {
+        results.forEach(result -> {
+            Integer pid = result.getPid();
+            if (!Objects.equals(pid, rootId)) {
+                validateRootParentIdIsRootId(menuMap, rootId, pid);
+            }
+        });
+    }
+
+    /**
+     * 验证数据的最上层pid为rootId
+     *
+     * @param rootId
+     * @param results
+     * @param menuMap
+     */
+    private void validateRootParentIdIsRootIdByHashMap(Integer rootId, List<LinkedHashMap> results, Map<Integer, Menu> menuMap) {
+        results.forEach(result -> {
+            Integer pid = (Integer) result.get("pid");
+            if (!Objects.equals(pid, rootId)) {
+                validateRootParentIdIsRootId(menuMap, rootId, pid);
+            }
+
+        });
+    }
+
+    /**
+     * 验证数据的最上层pid为rootId
+     *
+     * @param menuMap
+     * @param rootId
+     * @param pid
+     */
+    private void validateRootParentIdIsRootId(Map<Integer, Menu> menuMap, Integer rootId, Integer pid) {
+        Menu menu = menuMap.get(pid);
+        if (menu == null) {
+            Assert.assertTrue(String.format("validate rootId %s valid error : pid %s not found menu", rootId, pid), false);
+        } else {
+            pid = menu.getPid();
+        }
+        if (!Objects.equals(pid, rootId)) {
+            validateRootParentIdIsRootId(menuMap, rootId, pid);
+        }
 
     }
 }
