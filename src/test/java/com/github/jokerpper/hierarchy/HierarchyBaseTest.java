@@ -1,28 +1,12 @@
 package com.github.jokerpper.hierarchy;
 
-import com.alibaba.fastjson.JSONObject;
-import com.github.jokerpper.hierarchy.HierarchyDataSource;
-import com.github.jokerpper.hierarchy.HierarchyFlatUtils;
-import com.github.jokerpper.hierarchy.HierarchyUtils;
 import com.github.jokerpper.hierarchy.model.Menu;
-import org.junit.After;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
 public abstract class HierarchyBaseTest {
-
-    protected static String menuText = HierarchyDataSource.MENU_TEXT;
-
-    protected static List<Menu> getSourceMenuList() {
-       return JSONObject.parseArray(menuText, Menu.class);
-    }
-
-    @After
-    public void tearDown() throws Exception {
-
-    }
 
     public static class MenuResolver {
 
@@ -55,8 +39,8 @@ public abstract class HierarchyBaseTest {
             //获取id
             baseFunctions.setGetIdFunction(data -> data.getId());
 
-            //验证是否为root pid
-            baseFunctions.setIsRootPidFunction(pid -> Objects.equals(rootId, pid));
+            //验证是否为root
+            baseFunctions.setIsRootFunction(id -> Objects.equals(rootId, id));
 
             //设置children
             baseFunctions.setSetChildrenFunction((parent, children) -> {
@@ -81,19 +65,19 @@ public abstract class HierarchyBaseTest {
             //获取id
             functions.setGetIdFunction(data -> data.getId());
 
-            //验证是否为root pid
-            functions.setIsRootPidFunction(pid -> Objects.equals(rootId, pid));
+            //验证是否为root
+            functions.setIsRootFunction(id -> Objects.equals(rootId, id));
             return functions;
         }
 
         /**
          * 获取处理过的树形数据
          *
-         * @param pid
+         * @param rootId
          * @return
          */
-        static List<Menu> getResolvedWithChildrenMenuList(Integer pid) {
-            return HierarchyUtils.getHierarchyResult(getSourceMenuList(), getFunctions(pid), getComparator());
+        static List<Menu> getResolvedWithChildrenMenuList(Integer rootId) {
+            return HierarchyUtils.getHierarchyResult(HierarchyMetadata.getDefaultMenuList(), getFunctions(rootId), getComparator());
         }
 
     }

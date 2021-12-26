@@ -30,16 +30,12 @@ public class Menu {
 ### 1.通过原数据结构返回树形数据
 
 ``` 
+       
         //默认根元素为-1 (当前所有一级菜单的pid为-1,可根据实际定义根元素使用)
         Integer rootId = -1;
 
         //排序(需注意业务属性值是否为空),可选
-        Comparator<Menu> comparator = new Comparator<Menu>() {
-            @Override
-            public int compare(Menu o1, Menu o2) {
-                return Integer.compare(o1.getSort(), o2.getSort());
-            }
-        };
+        Comparator<Menu> comparator = Comparator.comparingInt(Menu::getSort);
 
         HierarchyUtils.HierarchyFunctions<Menu, Integer, Menu> defaultFunctions = new HierarchyUtils.HierarchyFunctions<>();
 
@@ -49,8 +45,8 @@ public class Menu {
         //获取id
         defaultFunctions.setGetIdFunction(data -> data.getId());
 
-        //验证是否为root pid
-        defaultFunctions.setIsRootPidFunction(pid -> Objects.equals(rootId, pid));
+        //验证是否为root
+        defaultFunctions.setIsRootFunction(id -> Objects.equals(rootId, id));
 
         //设置children
         defaultFunctions.setSetChildrenFunction((parent, children) -> {
@@ -63,13 +59,12 @@ public class Menu {
         //过滤条件(可选,用来筛选数据)
         defaultFunctions.setFilterPredicate(menu -> true);
 
-        List<Menu> defaultResults = HierarchyUtils.getHierarchyResult(
+        List<Menu> hierarchyResult = HierarchyUtils.getHierarchyResult(
                 menuList,
                 defaultFunctions,
                 comparator
         );
-
-        System.out.println(JSONObject.toJSONString(defaultResults));
+        System.out.println(JSONObject.toJSONString(hierarchyResult));
 
 ``` 
 
@@ -81,12 +76,7 @@ public class Menu {
         Integer rootId = -1;
 
         //排序(需注意业务属性值是否为空),可选
-        Comparator<Menu> comparator = new Comparator<Menu>() {
-            @Override
-            public int compare(Menu o1, Menu o2) {
-                return Integer.compare(o1.getSort(), o2.getSort());
-            }
-        };
+        Comparator<Menu> comparator = Comparator.comparingInt(Menu::getSort);
 
         HierarchyUtils.HierarchyFunctions<Menu, Integer, JSONObject> transferFunctions = new HierarchyUtils.HierarchyFunctions<>();
 
@@ -96,8 +86,8 @@ public class Menu {
         //获取id
         transferFunctions.setGetIdFunction(data -> data.getId());
 
-        //验证是否为root pid
-        transferFunctions.setIsRootPidFunction(pid -> Objects.equals(rootId, pid));
+        //验证是否为root
+        transferFunctions.setIsRootFunction(id -> Objects.equals(rootId, id));
 
         //设置转换函数
         transferFunctions.setTransferFunction(menu -> {
@@ -149,8 +139,8 @@ public class Menu {
         //获取id
         functions.setGetIdFunction(data -> data.getId());
 
-        //验证是否为root pid
-        functions.setIsRootPidFunction(pid -> Objects.equals(rootId, pid));
+        //验证是否为root
+        functions.setIsRootFunction(id -> Objects.equals(rootId, id));
 
         //是否返回root元素(未设置时默认false,开启时root元素必须存在)
         functions.setIsWithRoot(() -> true);
@@ -162,12 +152,7 @@ public class Menu {
         functions.setFilterPredicate(menu -> menu.getId() % 2 == 0 || Objects.equals(rootId, menu.getId()));
 
         //排序(需注意业务属性值是否为空),可选
-        Comparator<Menu> comparator = new Comparator<Menu>() {
-            @Override
-            public int compare(Menu o1, Menu o2) {
-                return Integer.compare(o1.getSort(), o2.getSort());
-            }
-        };
+        Comparator<Menu> comparator = Comparator.comparingInt(Menu::getSort);
 
         List<Menu> matchResults = HierarchyFlatUtils.getHierarchyFlatResult(
                 menuList,
@@ -177,12 +162,12 @@ public class Menu {
 
         //对返回结果排序(需注意业务属性值是否为空),可选
         HierarchySortUtils.sort(matchResults, comparator);
-
         System.out.println(JSONObject.toJSONString(matchResults));
+
 
 ``` 
 
-### 对返回结果list排序
+### 4.对返回结果list排序
 
 ``` 
     //对返回结果排序

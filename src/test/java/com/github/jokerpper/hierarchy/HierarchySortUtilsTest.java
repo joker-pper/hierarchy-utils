@@ -1,9 +1,7 @@
 package com.github.jokerpper.hierarchy;
 
-import com.alibaba.fastjson.JSONObject;
 import com.github.jokerpper.hierarchy.model.Menu;
 import com.github.jokerpper.hierarchy.support.HierarchyValidateHelper;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -13,17 +11,10 @@ import java.util.function.Function;
 
 public class HierarchySortUtilsTest {
 
-    private List<Menu> menuList;
-
-    @Before
-    public void setUp() throws Exception {
-        menuList = JSONObject.parseArray(HierarchyDataSource.MENU_TEXT, Menu.class);
-    }
-
     @Test
     public void testSort() {
         Comparator<Menu> comparator = Comparator.comparing(Menu::getId);
-        List<Menu> sourceList = menuList;
+        List<Menu> sourceList = HierarchyMetadata.getDefaultMenuList();
         HierarchySortUtils.sort(sourceList, comparator);
         HierarchyValidateHelper.assertSameSortedResult(sourceList, comparator);
     }
@@ -32,7 +23,7 @@ public class HierarchySortUtilsTest {
     public void testSortWithChildren() {
         Comparator<Menu> comparator = Comparator.comparing(Menu::getId);
         Function<Menu, List<Menu>> getChildrenFunction = (parent) -> parent.getChildren();
-        List<Menu> sourceList = HierarchyBaseTest.MenuResolver.getResolvedWithChildrenMenuList(HierarchyDataSource.ROOT_PID);
+        List<Menu> sourceList = HierarchyMetadata.getDefaultMenuTreeList();
         HierarchySortUtils.sortWithChildren(sourceList, getChildrenFunction, comparator);
         HierarchyValidateHelper.assertSameSortedResult(sourceList, comparator);
     }
@@ -61,7 +52,7 @@ public class HierarchySortUtilsTest {
     public void testSortWithChildrenByOther() {
         Comparator<Menu> comparator = Comparator.comparing(Menu::getId);
         Function<Menu, List<Menu>> getChildrenFunction = (parent) -> parent.getChildren();
-        List<Menu> sourceList = HierarchyBaseTest.MenuResolver.getResolvedWithChildrenMenuList(HierarchyDataSource.ROOT_PID);
+        List<Menu> sourceList = HierarchyMetadata.getDefaultMenuTreeList();
         for (Menu source : sourceList) {
             if (source.getChildren() == null) {
                 source.setChildren(Collections.emptyList());

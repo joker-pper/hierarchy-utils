@@ -4,13 +4,13 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.jokerpper.hierarchy.model.Menu;
 import com.github.jokerpper.hierarchy.support.HierarchyValidateHelper;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Random;
 
 public class HierarchySamplesTest {
 
@@ -20,7 +20,7 @@ public class HierarchySamplesTest {
     public void setUp() throws Exception {
         //查询当前用户的菜单列表(可模拟数据)
         //menuList = menuService.findAllByUserId(1);
-        menuList = JSONObject.parseArray(HierarchyDataSource.MENU_TEXT, Menu.class);
+        menuList = HierarchyMetadata.getDefaultMenuList();
     }
 
     /**
@@ -32,21 +32,7 @@ public class HierarchySamplesTest {
         Integer rootId = -1;
 
         //排序(需注意业务属性值是否为空),可选
-        Comparator<Menu> comparator = new Comparator<Menu>() {
-            @Override
-            public int compare(Menu o1, Menu o2) {
-                return Integer.compare(o1.getSort(), o2.getSort());
-            }
-        };
-
-        if (new Random().nextBoolean()) {
-            comparator = new Comparator<Menu>() {
-                @Override
-                public int compare(Menu o1, Menu o2) {
-                    return Integer.compare(o1.getId(), o2.getId());
-                }
-            };
-        }
+        Comparator<Menu> comparator = Comparator.comparingInt(Menu::getSort);
 
         HierarchyUtils.HierarchyFunctions<Menu, Integer, Menu> defaultFunctions = new HierarchyUtils.HierarchyFunctions<>();
 
@@ -56,8 +42,8 @@ public class HierarchySamplesTest {
         //获取id
         defaultFunctions.setGetIdFunction(data -> data.getId());
 
-        //验证是否为root pid
-        defaultFunctions.setIsRootPidFunction(pid -> Objects.equals(rootId, pid));
+        //验证是否为root
+        defaultFunctions.setIsRootFunction(id -> Objects.equals(rootId, id));
 
         //设置children
         defaultFunctions.setSetChildrenFunction((parent, children) -> {
@@ -70,16 +56,15 @@ public class HierarchySamplesTest {
         //过滤条件(可选,用来筛选数据)
         defaultFunctions.setFilterPredicate(menu -> true);
 
-        List<Menu> defaultResults = HierarchyUtils.getHierarchyResult(
+        List<Menu> hierarchyResult = HierarchyUtils.getHierarchyResult(
                 menuList,
                 defaultFunctions,
                 comparator
         );
+        System.out.println(JSONObject.toJSONString(hierarchyResult));
 
-        System.out.println(JSONObject.toJSONString(defaultResults));
-
-        //验证是否为期望的排序结果(忽略,用于test验证输出结果是否正确)
-        HierarchyValidateHelper.assertSameSortedResult(defaultResults, comparator);
+        //验证与期望结果是否一致(比较一致时通过验证)
+        Assert.assertTrue(Objects.equals(HierarchyMetadata.getDefaultMenuTreeList(), hierarchyResult));
     }
 
     /**
@@ -91,12 +76,7 @@ public class HierarchySamplesTest {
         Integer rootId = -1;
 
         //排序(需注意业务属性值是否为空),可选
-        Comparator<Menu> comparator = new Comparator<Menu>() {
-            @Override
-            public int compare(Menu o1, Menu o2) {
-                return Integer.compare(o1.getSort(), o2.getSort());
-            }
-        };
+        Comparator<Menu> comparator = Comparator.comparingInt(Menu::getSort);
 
         HierarchyUtils.HierarchyFunctions<Menu, Integer, JSONObject> transferFunctions = new HierarchyUtils.HierarchyFunctions<>();
 
@@ -106,8 +86,8 @@ public class HierarchySamplesTest {
         //获取id
         transferFunctions.setGetIdFunction(data -> data.getId());
 
-        //验证是否为root pid
-        transferFunctions.setIsRootPidFunction(pid -> Objects.equals(rootId, pid));
+        //验证是否为root
+        transferFunctions.setIsRootFunction(id -> Objects.equals(rootId, id));
 
         //设置转换函数
         transferFunctions.setTransferFunction(menu -> {
@@ -143,6 +123,8 @@ public class HierarchySamplesTest {
 
         System.out.println(JSONObject.toJSONString(transferResults));
 
+        //验证与期望结果是否一致(字符串一致时通过验证)
+        Assert.assertEquals(JSON.toJSONString(HierarchyMetadata.getDefaultMenuTransferSampleTreeList()), JSON.toJSONString(transferResults));
     }
 
 
@@ -161,8 +143,8 @@ public class HierarchySamplesTest {
         //获取id
         functions.setGetIdFunction(data -> data.getId());
 
-        //验证是否为root pid
-        functions.setIsRootPidFunction(pid -> Objects.equals(rootId, pid));
+        //验证是否为root
+        functions.setIsRootFunction(id -> Objects.equals(rootId, id));
 
         //是否返回root元素(未设置时默认false,开启时root元素必须存在)
         functions.setIsWithRoot(() -> true);
@@ -174,12 +156,7 @@ public class HierarchySamplesTest {
         functions.setFilterPredicate(menu -> menu.getId() % 2 == 0 || Objects.equals(rootId, menu.getId()));
 
         //排序(需注意业务属性值是否为空),可选
-        Comparator<Menu> comparator = new Comparator<Menu>() {
-            @Override
-            public int compare(Menu o1, Menu o2) {
-                return Integer.compare(o1.getSort(), o2.getSort());
-            }
-        };
+        Comparator<Menu> comparator = Comparator.comparingInt(Menu::getSort);
 
         List<Menu> matchResults = HierarchyFlatUtils.getHierarchyFlatResult(
                 menuList,
@@ -189,11 +166,14 @@ public class HierarchySamplesTest {
 
         //对返回结果排序(需注意业务属性值是否为空),可选
         HierarchySortUtils.sort(matchResults, comparator);
-
         System.out.println(JSONObject.toJSONString(matchResults));
 
         //验证是否为期望的排序结果(忽略,用于test验证输出结果是否正确)
         HierarchyValidateHelper.assertSameSortedResult(matchResults, comparator);
+
+        //验证与期望结果是否一致(互相全部包含时通过验证)
+        Assert.assertTrue(HierarchyMetadata.getDefaultMenuFlatSampleList().containsAll(matchResults));
+        Assert.assertTrue(matchResults.containsAll(HierarchyMetadata.getDefaultMenuFlatSampleList()));
     }
 
 }

@@ -19,7 +19,7 @@ public class HierarchyUtilsTest extends HierarchyBaseTest {
     @Test
     public void testWithLinkHashMap() {
 
-        List<LinkedHashMap> menuList = JSONObject.parseArray(menuText, LinkedHashMap.class);
+        List<LinkedHashMap> menuList = HierarchyMetadata.getDefaultMenuList(LinkedHashMap.class);
 
         Object rootId = 1;
 
@@ -31,20 +31,15 @@ public class HierarchyUtilsTest extends HierarchyBaseTest {
         //获取id
         functions.setGetIdFunction(data -> data.get("id"));
 
-        //验证是否为root pid
-        functions.setIsRootPidFunction(pid -> Objects.equals(rootId, pid));
+        //验证是否为root
+        functions.setIsRootFunction(id -> Objects.equals(rootId, id));
 
         //设置children
         functions.setSetChildrenFunction((parent, children) -> {
             parent.put("children", children);
         });
 
-        Comparator comparator = new Comparator<LinkedHashMap>() {
-            @Override
-            public int compare(LinkedHashMap o1, LinkedHashMap o2) {
-                return Integer.compare((int) o1.get("sort"), (int) o2.get("sort"));
-            }
-        };
+        Comparator<LinkedHashMap> comparator = Comparator.comparingInt(o -> (int) o.get("sort"));
 
         /**  验证root元素不存在 (默认)  **/
 
@@ -122,7 +117,7 @@ public class HierarchyUtilsTest extends HierarchyBaseTest {
 
     @Test
     public void testWithGetChildrenFunction() {
-        List<Menu> menuList = getSourceMenuList();
+        List<Menu> menuList = HierarchyMetadata.getDefaultMenuList(Menu.class);
 
         HierarchyUtils.HierarchyFunctions<Menu, Integer, Menu> functions = MenuResolver.getFunctions(-1);
         Comparator<Menu> comparator = MenuResolver.getComparator();

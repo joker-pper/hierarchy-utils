@@ -14,7 +14,7 @@ public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
      */
     @Test
     public void testWithMenu() {
-        List<Menu> menuList = getSourceMenuList();
+        List<Menu> menuList = HierarchyMetadata.getDefaultMenuList();
 
         Integer rootId = 1;
 
@@ -26,8 +26,8 @@ public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
         //获取id
         functions.setGetIdFunction(data -> data.getId());
 
-        //验证是否为root pid
-        functions.setIsRootPidFunction(pid -> Objects.equals(rootId, pid));
+        //验证是否为root
+        functions.setIsRootFunction(id -> Objects.equals(rootId, id));
 
         //设置返回全部的子元素
         functions.setIsWithAllChildren(() -> true);
@@ -46,12 +46,7 @@ public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
         });
 
         //排序(需注意业务属性值是否为空),可选
-        Comparator<Menu> comparator = new Comparator<Menu>() {
-            @Override
-            public int compare(Menu o1, Menu o2) {
-                return Integer.compare(o1.getSort(), o2.getSort());
-            }
-        };
+        Comparator<Menu> comparator = Comparator.comparingInt(Menu::getSort);
 
         /**  验证root元素不存在 (默认)  **/
 
@@ -123,7 +118,7 @@ public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
 
     @Test
     public void testWithGetChildrenFunction() {
-        List<Menu> menuList = getSourceMenuList();
+        List<Menu> menuList = HierarchyMetadata.getDefaultMenuList();
 
         Integer rootId = 1;
         HierarchyFlatUtils.HierarchyFlatFunctions<Menu, Integer, Menu> functions = MenuResolver.getFlatFunctions(rootId);

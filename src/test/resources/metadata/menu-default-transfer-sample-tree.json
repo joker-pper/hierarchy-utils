@@ -1,0 +1,80 @@
+[
+  {
+    "newName": "一级",
+    "title": "一级",
+    "id": 1,
+    "pid": -1,
+    "sort": 1,
+    "order": 1,
+    "children": [
+      {
+        "newName": "二级(1-7)",
+        "title": "二级(1-7)",
+        "id": 7,
+        "pid": 1,
+        "sort": 92,
+        "order": 92
+      },
+      {
+        "newName": "二级(1-6)",
+        "title": "二级(1-6)",
+        "id": 6,
+        "pid": 1,
+        "sort": 98,
+        "order": 98
+      },
+      {
+        "newName": "二级(1-2)",
+        "title": "二级(1-2)",
+        "id": 2,
+        "pid": 1,
+        "sort": 99,
+        "order": 99,
+        "children": [
+          {
+            "newName": "三级(1-2-3)",
+            "title": "三级(1-2-3)",
+            "id": 3,
+            "pid": 2,
+            "sort": 1,
+            "order": 1,
+            "children": [
+              {
+                "newName": "四级(1-2-3-9)",
+                "title": "四级(1-2-3-9)",
+                "id": 9,
+                "pid": 3,
+                "sort": 80,
+                "order": 80
+              },
+              {
+                "newName": "四级(1-2-3-8)",
+                "title": "四级(1-2-3-8)",
+                "id": 8,
+                "pid": 3,
+                "sort": 91,
+                "order": 91
+              }
+            ]
+          },
+          {
+            "newName": "三级(1-2-5)",
+            "title": "三级(1-2-5)",
+            "id": 5,
+            "pid": 2,
+            "sort": 5,
+            "order": 5
+          },
+          {
+            "newName": "三级(1-2-4)",
+            "title": "三级(1-2-4)",
+            "id": 4,
+            "pid": 2,
+            "sort": 22,
+            "order": 22
+          }
+        ]
+      }
+    ]
+  }
+]

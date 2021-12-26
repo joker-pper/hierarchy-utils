@@ -17,10 +17,10 @@ public class HierarchyFlatUtils {
     public static class HierarchyFlatFunctions<T, V, R> {
 
         /**
-         * 判断是否为root pid函数
+         * 判断是否为root函数
          * 必选
          */
-        private Function<V, Boolean> isRootPidFunction;
+        private Function<V, Boolean> isRootFunction;
 
         /**
          * 获取 pid函数
@@ -70,12 +70,12 @@ public class HierarchyFlatUtils {
          */
         private Supplier<Boolean> isWithRoot;
 
-        public Function<V, Boolean> getIsRootPidFunction() {
-            return isRootPidFunction;
+        public Function<V, Boolean> getIsRootFunction() {
+            return isRootFunction;
         }
 
-        public void setIsRootPidFunction(Function<V, Boolean> isRootPidFunction) {
-            this.isRootPidFunction = isRootPidFunction;
+        public void setIsRootFunction(Function<V, Boolean> isRootFunction) {
+            this.isRootFunction = isRootFunction;
         }
 
         public Function<T, V> getGetPidFunction() {
@@ -192,14 +192,14 @@ public class HierarchyFlatUtils {
                                                            final Comparator<T> comparator) {
         //检查参数
         Objects.requireNonNull(functions, "functions must be not null");
-        Function<V, Boolean> isRootPidFunction = functions.getIsRootPidFunction();
+        Function<V, Boolean> isRootFunction = functions.getIsRootFunction();
         Function<T, V> getPidFunction = functions.getGetPidFunction();
         Function<T, V> getIdFunction = functions.getGetIdFunction();
         Function<T, List<T>> getChildrenFunction = functions.getGetChildrenFunction();
         Function<T, R> transferFunction = functions.getTransferFunction();
         Predicate<T> filterPredicate = functions.getFilterPredicate();
 
-        Objects.requireNonNull(isRootPidFunction, "is root pid function must be not null");
+        Objects.requireNonNull(isRootFunction, "is root function must be not null");
         Objects.requireNonNull(getPidFunction, "get pid function must be not null");
         Objects.requireNonNull(getIdFunction, "get id function must be not null");
 
@@ -229,13 +229,13 @@ public class HierarchyFlatUtils {
         //处理数据
         List<R> rootList = isWithRoot ? new ArrayList<>(2) : null;
         List<R> results = new ArrayList<>(1024);
-        Map<V, List<T>> toResolveSourceIdChildrenMap = HierarchyHelper.initAndGetIdChildrenResultMap(toResolveSourceList, getPidFunction, isRootPidFunction);
+        Map<V, List<T>> toResolveSourceIdChildrenMap = HierarchyHelper.initAndGetIdChildrenResultMap(toResolveSourceList, getIdFunction, getPidFunction, isRootFunction);
 
         if (!isEnableTransfer) {
             for (T toResolveSource : toResolveSourceList) {
                 resolveHierarchyWithoutEnableTransfer(results, toResolveSource
                         , toResolveSourceIdChildrenMap, rootList
-                        , isRootPidFunction, getPidFunction
+                        , isRootFunction, getPidFunction
                         , getIdFunction, isWithAllChildren);
             }
         } else {
@@ -243,7 +243,7 @@ public class HierarchyFlatUtils {
                 R transferResult = HierarchyHelper.getTransferResult(transferFunction, toResolveSource);
                 resolveHierarchyWithEnableTransfer(results, toResolveSource, transferResult
                         , toResolveSourceIdChildrenMap, rootList
-                        , isRootPidFunction, getPidFunction
+                        , isRootFunction, getPidFunction
                         , getIdFunction, transferFunction
                         , isWithAllChildren);
             }
@@ -266,39 +266,51 @@ public class HierarchyFlatUtils {
 
     private static <T, R, V> void resolveHierarchyWithoutEnableTransfer(final List<R> results, final T toResolveSource
             , final Map<V, List<T>> toResolveSourceIdChildrenMap, final List<R> rootList
-            , final Function<V, Boolean> isRootPidFunction, final Function<T, V> getPidFunction
+            , final Function<V, Boolean> isRootFunction, final Function<T, V> getPidFunction
             , final Function<T, V> getIdFunction, final boolean isWithAllChildren) {
         V id = getIdFunction.apply(toResolveSource);
         V pid = getPidFunction.apply(toResolveSource);
-        boolean isMatchRootPid = isRootPidFunction.apply(pid);
         R transferResult = (R) toResolveSource;
-        if (isMatchRootPid) {
-            //当pid为root pid时直接添加到结果中
+        boolean isRoot = isRootFunction.apply(id);
+        if (isRoot) {
+            //启用root时且当前元素为root放入rootList
+            if (rootList != null) {
+                HierarchyHelper.addRoot(rootList, transferResult);
+            }
+            return;
+        }
+
+        boolean isRootDirectChild = isRootFunction.apply(pid);
+        if (isRootDirectChild) {
+            //是root直接子元素时
             results.add(transferResult);
             //处理相关children
             if (isWithAllChildren) {
                 resolveWithAllChildren(results, toResolveSourceIdChildrenMap, getIdFunction, id);
             }
-        } else {
-            //启用root时且当前元素为root放入rootList
-            if (rootList != null && isRootPidFunction.apply(id)) {
-                HierarchyHelper.addRoot(rootList, transferResult);
-            }
         }
-
     }
 
     private static <T, R, V> void resolveHierarchyWithEnableTransfer(final List<R> results, final T toResolveSource, final R transferResult
             , final Map<V, List<T>> toResolveSourceIdChildrenMap, final List<R> rootList
-            , final Function<V, Boolean> isRootPidFunction, final Function<T, V> getPidFunction
+            , final Function<V, Boolean> isRootFunction, final Function<T, V> getPidFunction
             , final Function<T, V> getIdFunction, Function<T, R> transferFunction
             , final boolean isWithAllChildren) {
 
         V id = getIdFunction.apply(toResolveSource);
         V pid = getPidFunction.apply(toResolveSource);
-        boolean isMatchRootPid = isRootPidFunction.apply(pid);
-        if (isMatchRootPid) {
-            //当pid为root pid时直接添加到结果中
+        boolean isRoot = isRootFunction.apply(id);
+        if (isRoot) {
+            //启用root时且当前元素为root放入rootList
+            if (rootList != null) {
+                HierarchyHelper.addRoot(rootList, transferResult);
+            }
+            return;
+        }
+
+        boolean isRootDirectChild = isRootFunction.apply(pid);
+        if (isRootDirectChild) {
+            //是root直接子元素时
             results.add(transferResult);
 
             //处理相关children
@@ -306,12 +318,6 @@ public class HierarchyFlatUtils {
                 resolveWithAllChildren(results, toResolveSourceIdChildrenMap
                         , getIdFunction, transferFunction
                         , id);
-            }
-
-        } else {
-            //启用root时且当前元素为root放入rootList
-            if (rootList != null && isRootPidFunction.apply(id)) {
-                HierarchyHelper.addRoot(rootList, transferResult);
             }
         }
     }

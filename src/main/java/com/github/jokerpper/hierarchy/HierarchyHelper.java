@@ -192,27 +192,33 @@ public class HierarchyHelper {
     }
 
     /**
-     * 获取元素id所对应的子元素(但不包含root pid)
+     * 获取元素id所对应的子元素(但不包含root)
      *
      * @param toResolveSourceList 待处理的数据元素列表
+     * @param getIdFunction       获取 id 函数
      * @param getPidFunction      获取 pid 函数
-     * @param isRootPidFunction   是否为 root pid 函数
+     * @param isRootFunction      是否为 root函数
      * @param <T>
      * @param <V>
      * @return
      */
-    static <T, V> Map<V, List<T>> initAndGetIdChildrenResultMap(final List<T> toResolveSourceList
-            , final Function<T, V> getPidFunction
-            , final Function<V, Boolean> isRootPidFunction) {
+    static <T, V> Map<V, List<T>> initAndGetIdChildrenResultMap(
+            final List<T> toResolveSourceList,
+            Function<T, V> getIdFunction,
+            final Function<T, V> getPidFunction,
+            final Function<V, Boolean> isRootFunction) {
 
         Map<V, List<T>> resultMap = new HashMap<>(toResolveSourceList.size());
         for (T toResolveSource : toResolveSourceList) {
-            //获取pid
-            V pid = getPidFunction.apply(toResolveSource);
-            if (isRootPidFunction.apply(pid)) {
-                //为root pid时跳过
+            //获取id
+            V id = getIdFunction.apply(toResolveSource);
+            if (isRootFunction.apply(id)) {
+                //为root时跳过
                 continue;
             }
+
+            //获取pid
+            V pid = getPidFunction.apply(toResolveSource);
 
             //将pid对应的数据列表放入map中
             List<T> pidSourceList = resultMap.get(pid);
