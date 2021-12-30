@@ -68,7 +68,7 @@ public class HierarchyUtils {
 
 
         /**
-         * 是否以root元素作为根(id与root pid验证相等时为root)
+         * 是否以root元素作为根
          * 可选,默认false,当开启时必须存在root且只允许存在一个
          */
         private Supplier<Boolean> isWithRoot;
