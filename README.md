@@ -1,7 +1,20 @@
 # hierarchy-utils
+
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.joker-pper/hierarchy-utils.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22io.github.joker-pper%22%20AND%20a:%22hierarchy-utils%22)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
     用于构建/查找具有层级关系树形数据的工具库,以解决业务中常见的树形数据处理需求
     支持自定义过滤数据、排序及转换数据等
 
+## 快速使用
+
+```xml
+        <dependency>
+            <groupId>io.github.joker-pper</groupId>
+            <artifactId>hierarchy-utils</artifactId>
+            <version>${version}</version>
+        </dependency>
+```
 
 ## 使用示例
 
