@@ -6,7 +6,7 @@
 
     <groupId>io.github.joker-pper</groupId>
     <artifactId>hierarchy-utils</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>hierarchy-utils</name>
     <description>用于构建/查找具有层级关系树形数据的工具库</description>
     <url>http://github.com/joker-pper/hierarchy-utils</url>
