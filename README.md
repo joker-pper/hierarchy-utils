@@ -16,6 +16,10 @@
         </dependency>
 ```
 
+## 说明
+
+    不依赖其他组件，如要使用fastjson / fastjson2等需自行引用。
+
 ## 使用示例
 
 
@@ -81,7 +85,7 @@ public class Menu {
 
 ``` 
 
-### 2.原数据结构未定义children,通过转换数据结构返回树形数据
+### 2.若原数据结构未定义children或不使用原数据结构，可通过转换数据结构（使用Map / JSONObject等）进行返回树形数据 
 
 ``` 
     
@@ -138,7 +142,7 @@ public class Menu {
 
         
 ``` 
-### 3.返回源数据列表中id为rootId的元素或pid为rootId且id能整除2的全部子元素的数据列表
+### 3.返回源数据列表中id为rootId的元素或pid为rootId且id能整除2的全部子元素的数据列表 （支持将树形数据打平及过滤）
 
 ``` 
 
@@ -180,13 +184,18 @@ public class Menu {
 
 ``` 
 
-### 4.对返回结果list排序
+### 4.如何对返回结果list排序的方法
 
 ``` 
-    //对返回结果排序
+    //对返回结果排序 （只排序当前列表，不会递归排序子元素）
     HierarchySortUtils.sort(list, comparator); 
         
-    //对返回结果及子元素排序
+    //对返回结果及子元素排序（递归排序）
     HierarchySortUtils.sortWithChildren(list, childrenFunction, comparator);  
 
 ``` 
+
+## 其他
+
+  若该项目对您有所帮助，请不吝点赞，谢谢！
+  
