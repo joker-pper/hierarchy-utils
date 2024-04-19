@@ -6,7 +6,7 @@
 
     <groupId>io.github.joker-pper</groupId>
     <artifactId>hierarchy-utils</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <name>hierarchy-utils</name>
     <description>用于构建/查找具有层级关系树形数据的工具库</description>
     <url>http://github.com/joker-pper/hierarchy-utils</url>
@@ -37,11 +37,15 @@
         <nexus-staging-maven-plugin.version>1.6.7</nexus-staging-maven-plugin.version>
         <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
         <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
-        <maven-javadoc-plugin.version>2.9.1</maven-javadoc-plugin.version>
+        <maven-javadoc-plugin.version>3.3.2</maven-javadoc-plugin.version>
         <cobertura-maven-plugin.version>2.7</cobertura-maven-plugin.version>
         <junit.version>4.13.1</junit.version>
-        <fastjson.version>1.2.78</fastjson.version>
+        <fastjson.version>1.2.83</fastjson.version>
         <lombok.version>1.18.12</lombok.version>
+        <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
+        <jacoco.path>${project.build.directory}/jacoco.exec</jacoco.path>
+        <jacoco.report-aggregate.phase>test</jacoco.report-aggregate.phase>
+        <jacoco.skip>false</jacoco.skip>
     </properties>
 
     <dependencies>
@@ -179,6 +183,49 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco-maven-plugin.version}</version>
+                <configuration>
+                    <skip>${jacoco.skip}</skip>
+                    <destFile>${jacoco.path}</destFile>
+                    <dataFile>${jacoco.path}</dataFile>
+                    <sessionId>jacoco_coverage</sessionId>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>pre-test</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+
+                    <execution>
+                        <id>post-unit-test</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <dataFile>target/jacoco.exec</dataFile>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>report-aggregate</id>
+                        <phase>${jacoco.report-aggregate.phase}</phase>
+                        <goals>
+                            <goal>report-aggregate</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/site/jacoco-aggregate</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 
