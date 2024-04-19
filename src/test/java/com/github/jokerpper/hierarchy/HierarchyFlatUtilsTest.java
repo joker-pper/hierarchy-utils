@@ -148,6 +148,8 @@ public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
                 functions,
                 comparator
         );
+        //排序结果值
+        HierarchySortUtils.sort(defaultFlatResults, comparator);
 
         //验证数据的最上层pid为rootId
         validateRootParentIdIsRootId(rootId, defaultFlatResults, menuMap);
@@ -164,12 +166,22 @@ public class HierarchyFlatUtilsTest extends HierarchyBaseTest {
                 comparator
         );
 
+        //排序结果值
+        HierarchySortUtils.sortWithChildren(flatWithTreeResults, functions.getGetChildrenFunction(), comparator);
+
         //验证数据的最上层pid为rootId
         validateRootParentIdIsRootId(rootId, flatWithTreeResults, menuMap);
 
         //验证结果一致(不考虑children存在的情况)
         Assert.assertEquals(defaultFlatResults.stream().map(Menu::getId).collect(Collectors.toList()), flatWithTreeResults.stream().map(Menu::getId).collect(Collectors.toList()));
 
+        //验证默认不排序，后续再排序结果一致
+        List<Menu> flatWithTreeWithOutComparatorResults = HierarchyFlatUtils.getHierarchyFlatResult(
+                treeResults,
+                functions
+        );
+        HierarchySortUtils.sortWithChildren(flatWithTreeWithOutComparatorResults, functions.getGetChildrenFunction(), comparator);
+        Assert.assertEquals(flatWithTreeResults, flatWithTreeWithOutComparatorResults);
     }
 
 

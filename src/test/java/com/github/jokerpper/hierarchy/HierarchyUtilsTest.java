@@ -107,6 +107,14 @@ public class HierarchyUtilsTest extends HierarchyBaseTest {
                 , comparator));
         Assert.assertNotNull(HierarchyUtils.getHierarchyResult(menuList, functions
                 , null));
+
+        //验证默认不排序，后续再排序结果一致
+        List<LinkedHashMap> afterTransferWithOutComparatorResults = HierarchyUtils.getHierarchyResult(
+                menuList,
+                functions
+        );
+        HierarchySortUtils.sortWithChildren(afterTransferWithOutComparatorResults, (data) -> (List<LinkedHashMap>) data.get("children"), comparator);
+        Assert.assertEquals(afterTransferResults, afterTransferWithOutComparatorResults);
     }
 
 
@@ -129,6 +137,12 @@ public class HierarchyUtilsTest extends HierarchyBaseTest {
         //验证结果一致
         Assert.assertEquals(menuList.size(), defaultResults.size());
         Assert.assertEquals(beforeJson, afterJson);
+
+        //验证默认不排序，后续再排序结果一致
+        List<Menu> defaultWithOutComparatorResults = HierarchyUtils.getHierarchyResult(menuList, functions);
+        HierarchySortUtils.sortWithChildren(defaultWithOutComparatorResults, functions.getGetChildrenFunction(), comparator);
+        Assert.assertEquals(defaultResults, defaultWithOutComparatorResults);
+
     }
 
     @Test
