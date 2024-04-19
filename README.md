@@ -1,6 +1,6 @@
 # hierarchy-utils
 
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.joker-pper/hierarchy-utils.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22io.github.joker-pper%22%20AND%20a:%22hierarchy-utils%22)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.joker-pper/hierarchy-utils.svg?label=Maven%20Central)](https://search.maven.org/search?q=io.github.joker-pper:hierarchy-utils)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![codecov](https://codecov.io/gh/joker-pper/hierarchy-utils/branch/main/graph/badge.svg)](https://codecov.io/gh/joker-pper/hierarchy-utils)
 
