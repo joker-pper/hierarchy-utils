@@ -188,6 +188,8 @@ public class HierarchySamplesTest {
         Assert.assertTrue(HierarchyMetadata.getDefaultMenuFlatSampleList().containsAll(matchResults));
         Assert.assertTrue(matchResults.containsAll(HierarchyMetadata.getDefaultMenuFlatSampleList()));
 
+        //验证包含rootId
+        Assert.assertTrue(matchResults.stream().anyMatch(menu -> functions.getIsRootFunction().apply(menu.getId())));
 
         //验证原数据没有被改变...
         Assert.assertEquals(HierarchyMetadata.getDefaultMenuList(), menuList);
@@ -269,6 +271,9 @@ public class HierarchySamplesTest {
         //转换为menu list比较
         List<Menu> convertMatchResults = JSONObject.parseArray(JSONObject.toJSONString(matchResults), Menu.class);
 
+        //验证包含rootId
+        Assert.assertTrue(convertMatchResults.stream().anyMatch(menu -> functions.getIsRootFunction().apply(menu.getId())));
+
         //验证与期望结果是否一致(互相全部包含时通过验证)
         Assert.assertTrue(HierarchyMetadata.getDefaultMenuFlatSampleList().containsAll(convertMatchResults));
         Assert.assertTrue(convertMatchResults.containsAll(HierarchyMetadata.getDefaultMenuFlatSampleList()));
@@ -342,6 +347,9 @@ public class HierarchySamplesTest {
                 comparator
         );
         System.out.println(JSONObject.toJSONString(hierarchyResult));
+
+        //验证包含rootId
+        Assert.assertTrue(hierarchyResult.stream().anyMatch(menu -> defaultFunctions.getIsRootFunction().apply(menu.getId())));
 
         //验证原数据已被改变...
         Assert.assertNotEquals(HierarchyMetadata.getDefaultMenuTreeList(), menuList);

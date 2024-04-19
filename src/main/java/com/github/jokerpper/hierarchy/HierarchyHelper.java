@@ -22,9 +22,8 @@ public class HierarchyHelper {
      * @param <T>
      * @return
      */
-    static <T> List getNewList(final Collection<T> sourceList) {
-        List<T> resultList = new ArrayList<>(sourceList);
-        return resultList;
+    static <T> List<T> getNewList(final Collection<T> sourceList) {
+        return new ArrayList<>(sourceList);
     }
 
 
@@ -67,7 +66,7 @@ public class HierarchyHelper {
     static <T> List<T> getApplySourceListWithPredicate(final List<T> sourceList, final Predicate<T> filterPredicate) {
         int size = sourceList.size();
         int capacity = (int) (size * 0.8);
-        capacity = capacity > 16 ? capacity : 16;
+        capacity = Math.max(capacity, 16);
         final List<T> applySourceList = new ArrayList<>(capacity);
         for (T source : sourceList) {
             if (filterPredicate.test(source)) {
@@ -88,7 +87,7 @@ public class HierarchyHelper {
     static <T> List<T> getApplySourceListWithChildren(final List<T> sourceList, final Function<T, List<T>> getChildrenFunction) {
         int size = sourceList.size();
         int capacity = (int) (size * 1.8);
-        capacity = capacity > 256 ? capacity : 256;
+        capacity = Math.max(capacity, 256);
         final List<T> resultList = new ArrayList<>(capacity);
         resolveSourceList(sourceList, resultList, getChildrenFunction);
         return resultList;
@@ -107,7 +106,7 @@ public class HierarchyHelper {
             , final Function<T, List<T>> getChildrenFunction, final Predicate<T> filterPredicate) {
         int size = sourceList.size();
         int capacity = (int) (size * 1.8);
-        capacity = capacity > 256 ? capacity : 256;
+        capacity = Math.max(capacity, 256);
         final List<T> resultList = new ArrayList<>(capacity);
         resolveSourceListWithPredicate(sourceList, resultList, getChildrenFunction, filterPredicate);
         return resultList;
@@ -221,11 +220,7 @@ public class HierarchyHelper {
             V pid = getPidFunction.apply(toResolveSource);
 
             //将pid对应的数据列表放入map中
-            List<T> pidSourceList = resultMap.get(pid);
-            if (pidSourceList == null) {
-                pidSourceList = new ArrayList<>(32);
-                resultMap.put(pid, pidSourceList);
-            }
+            List<T> pidSourceList = resultMap.computeIfAbsent(pid, k -> new ArrayList<>(32));
             pidSourceList.add(toResolveSource);
         }
         return resultMap;

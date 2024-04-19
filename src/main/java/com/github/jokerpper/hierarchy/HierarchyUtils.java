@@ -209,50 +209,65 @@ public class HierarchyUtils {
             return Collections.emptyList();
         }
 
-        //获取当前要处理的元素列表
-        final List<T> toResolveSourceList = HierarchyHelper.getApplySourceList(sourceList, getChildrenFunction, filterPredicate);
-        //进行排序数据列表
-        if (comparator != null && toResolveSourceList.size() > 1) {
-            Collections.sort(toResolveSourceList, comparator);
-        }
+        List<T> toResolveSourceList = null;
+        Map<V, List<T>> toResolveSourceIdChildrenMap = null;
+        try {
+            //获取当前要处理的元素列表
+            toResolveSourceList = HierarchyHelper.getApplySourceList(sourceList, getChildrenFunction, filterPredicate);
 
-        //处理数据
-        List<R> rootList = isWithRoot ? new ArrayList<>(2) : null;
-        List<R> results = new ArrayList<>(512);
-
-        //获取元素id所对应的子元素(但不包含root pid)
-        Map<V, List<T>> toResolveSourceIdChildrenMap = HierarchyHelper.initAndGetIdChildrenResultMap(toResolveSourceList, getIdFunction, getPidFunction, isRootFunction);
-
-        if (!isEnableTransfer) {
-            for (T toResolveSource : toResolveSourceList) {
-                resolveHierarchyWithoutEnableTransfer(results, toResolveSource
-                        , toResolveSourceIdChildrenMap, rootList
-                        , isRootFunction, getPidFunction
-                        , getIdFunction, setChildrenFunction);
+            //进行排序数据列表
+            if (comparator != null && toResolveSourceList.size() > 1) {
+                Collections.sort(toResolveSourceList, comparator);
             }
-        } else {
-            for (T toResolveSource : toResolveSourceList) {
-                R transferResult = HierarchyHelper.getTransferResult(transferFunction, toResolveSource);
-                resolveHierarchyWithEnableTransfer(results, toResolveSource, transferResult
-                        , toResolveSourceIdChildrenMap, rootList
-                        , isRootFunction, getPidFunction
-                        , getIdFunction, transferFunction
-                        , setChildrenFunction);
+
+            //获取元素id所对应的子元素(但不包含root pid)
+            toResolveSourceIdChildrenMap = HierarchyHelper.initAndGetIdChildrenResultMap(toResolveSourceList, getIdFunction, getPidFunction, isRootFunction);
+
+            //处理数据
+            List<R> rootList = isWithRoot ? new ArrayList<>(2) : null;
+            List<R> results = new ArrayList<>(512);
+
+            if (!isEnableTransfer) {
+                for (T toResolveSource : toResolveSourceList) {
+                    resolveHierarchyWithoutEnableTransfer(results, toResolveSource
+                            , toResolveSourceIdChildrenMap, rootList
+                            , isRootFunction, getPidFunction
+                            , getIdFunction, setChildrenFunction);
+                }
+            } else {
+                for (T toResolveSource : toResolveSourceList) {
+                    R transferResult = HierarchyHelper.getTransferResult(transferFunction, toResolveSource);
+                    resolveHierarchyWithEnableTransfer(results, toResolveSource, transferResult
+                            , toResolveSourceIdChildrenMap, rootList
+                            , isRootFunction, getPidFunction
+                            , getIdFunction, transferFunction
+                            , setChildrenFunction);
+                }
             }
+
+            if (!isWithRoot) {
+                //不包含root时直接返回
+                return results;
+            }
+
+            //检查rootList是否合法
+            HierarchyHelper.checkRootList(rootList);
+
+            //设置root子元素
+            HierarchyHelper.resolveAndSetChildren(setChildrenFunction, rootList.get(0), results);
+
+            return rootList;
+        } finally {
+
+            if (toResolveSourceList != null) {
+                toResolveSourceList.clear();
+            }
+
+            if (toResolveSourceIdChildrenMap != null) {
+                toResolveSourceIdChildrenMap.clear();
+            }
+
         }
-
-        if (!isWithRoot) {
-            //不包含root时直接返回
-            return results;
-        }
-
-        //检查rootList是否合法
-        HierarchyHelper.checkRootList(rootList);
-
-        //设置root子元素
-        HierarchyHelper.resolveAndSetChildren(setChildrenFunction, rootList.get(0), results);
-
-        return rootList;
     }
 
 
