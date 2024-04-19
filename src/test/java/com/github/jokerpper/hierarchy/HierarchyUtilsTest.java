@@ -109,6 +109,49 @@ public class HierarchyUtilsTest extends HierarchyBaseTest {
                 , null));
     }
 
+
+    @Test
+    public void testWithTreeList() {
+        List<Menu> menuList = HierarchyMetadata.getDefaultMenuTreeList();
+        String beforeJson = JSONObject.toJSONString(menuList);
+
+        HierarchyUtils.HierarchyFunctions<Menu, Integer, Menu> functions = MenuResolver.getFunctions(-1);
+        Comparator<Menu> comparator = MenuResolver.getComparator();
+
+        //设置获取children
+        functions.setGetChildrenFunction((data) -> data.getChildren());
+
+        //通过源数据列表处理的结果
+        List<Menu> defaultResults = HierarchyUtils.getHierarchyResult(menuList, functions, comparator);
+
+        String afterJson = JSONObject.toJSONString(defaultResults);
+
+        //验证结果一致
+        Assert.assertEquals(menuList.size(), defaultResults.size());
+        Assert.assertEquals(beforeJson, afterJson);
+    }
+
+    @Test
+    public void testWithTreeListWithOutGetChildrenFunction() {
+        List<Menu> menuList = HierarchyMetadata.getDefaultMenuTreeList();
+        String beforeJson = JSONObject.toJSONString(menuList);
+
+        HierarchyUtils.HierarchyFunctions<Menu, Integer, Menu> functions = MenuResolver.getFunctions(-1);
+        Comparator<Menu> comparator = MenuResolver.getComparator();
+
+        //设置获取children
+        functions.setGetChildrenFunction(null);
+
+        //通过源数据列表处理的结果
+        List<Menu> defaultResults = HierarchyUtils.getHierarchyResult(menuList, functions, comparator);
+
+        String afterJson = JSONObject.toJSONString(defaultResults);
+
+        Assert.assertTrue(defaultResults.get(0).getChildren() == null || defaultResults.get(0).getChildren().isEmpty());
+        Assert.assertNotEquals(beforeJson, afterJson);
+    }
+
+
     @Test(expected = NullPointerException.class)
     public void testFunctionsNull() {
         HierarchyUtils.getHierarchyResult(null, null

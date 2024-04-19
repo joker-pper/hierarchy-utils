@@ -13,6 +13,10 @@ public class HierarchyMetadata {
         final static String MENU_DEFAULT_JSON = "src/test/resources/metadata/menu-default.json";
         final static String MENU_DEFAULT_TREE_JSON = "src/test/resources/metadata/menu-default-tree.json";
 
+        /**
+         * 示例结果json
+         */
+
         final static String MENU_DEFAULT_TRANSFER_SAMPLE_TREE_JSON = "src/test/resources/metadata/menu-default-transfer-sample-tree.json";
         final static String MENU_DEFAULT_FLAT_SAMPLE_JSON = "src/test/resources/metadata/menu-default-flat-sample.json";
     }

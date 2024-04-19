@@ -44,7 +44,7 @@ public class Menu {
         List<Menu> menuList = JSONObject.parseArray(menuText, Menu.class);;
 
 
-### 1.通过原数据结构返回树形数据
+### 场景1: 通过原数据结构返回树形数据 (全部铺平的数据列表)
 
 ``` 
        
@@ -66,16 +66,15 @@ public class Menu {
         defaultFunctions.setIsRootFunction(id -> Objects.equals(rootId, id));
 
         //设置children
-        defaultFunctions.setSetChildrenFunction((parent, children) -> {
-            parent.setChildren(children);
-        });
+        defaultFunctions.setSetChildrenFunction((parent, children) -> parent.setChildren(children));
 
         //是否返回root元素(未设置时默认false,开启时root元素必须存在)
         defaultFunctions.setIsWithRoot(() -> false);
 
         //过滤条件(可选,用来筛选数据)
         defaultFunctions.setFilterPredicate(menu -> true);
-
+        
+        //获取结果(注意: 原数据列表会被改变,如有需要请在执行前进行备份原数据..)
         List<Menu> hierarchyResult = HierarchyUtils.getHierarchyResult(
                 menuList,
                 defaultFunctions,
@@ -85,7 +84,7 @@ public class Menu {
 
 ``` 
 
-### 2.若原数据结构未定义children或不使用原数据结构，可通过转换数据结构（使用Map / JSONObject等）进行返回树形数据 
+### 场景2: 若原数据结构未定义children或不使用原数据结构，可通过转换数据结构（使用Map / JSONObject等）进行返回树形数据
 
 ``` 
     
@@ -142,10 +141,11 @@ public class Menu {
 
         
 ``` 
-### 3.返回源数据列表中id为rootId的元素或pid为rootId且id能整除2的全部子元素的数据列表 （支持将树形数据打平及过滤）
+
+### 场景3-1: 返回源数据列表中id为rootId的元素或pid为rootId且id能整除2的全部子元素的数据列表 （支持将树形数据打平及过滤）
 
 ``` 
-
+        //用于筛选指定id作为根
         Integer rootId = 1;
 
         HierarchyFlatUtils.HierarchyFlatFunctions<Menu, Integer, Menu> functions = new HierarchyFlatUtils.HierarchyFlatFunctions<>();
@@ -165,12 +165,16 @@ public class Menu {
         //是否返回全部的子元素(未设置时默认false,即默认只返回root元素的直接子元素)
         functions.setIsWithAllChildren(() -> true);
 
+        //设置获取children(如果当前数据列表为递归树数据,需要进行设置,否则子级数据会被跳过)
+        functions.setGetChildrenFunction((data) -> data.getChildren());
+
         //过滤条件(可选,用来筛选数据)
         functions.setFilterPredicate(menu -> menu.getId() % 2 == 0 || Objects.equals(rootId, menu.getId()));
 
-        //排序(需注意业务属性值是否为空),可选
+        //排序(需注意业务属性值是否为空),可选 -- 用于排序当前要处理的数据列表
         Comparator<Menu> comparator = Comparator.comparingInt(Menu::getSort);
 
+        //获取打平后的结果(如果为递归树数据,children会被保留)
         List<Menu> matchResults = HierarchyFlatUtils.getHierarchyFlatResult(
                 menuList,
                 functions,
@@ -184,7 +188,104 @@ public class Menu {
 
 ``` 
 
-### 4.如何对返回结果list排序的方法
+### 场景3-2: 【转换数据示例】返回源数据列表中id为rootId的元素或pid为rootId且id能整除2的全部子元素的数据列表 （支持将树形数据打平及过滤）
+
+``` 
+          //用于筛选指定id作为根
+        Integer rootId = 1;
+
+        HierarchyFlatUtils.HierarchyFlatFunctions<Menu, Integer, JSONObject> functions = new HierarchyFlatUtils.HierarchyFlatFunctions<>();
+
+        //获取pid
+        functions.setGetPidFunction(data -> data.getPid());
+
+        //获取id
+        functions.setGetIdFunction(data -> data.getId());
+
+        //验证是否为root
+        functions.setIsRootFunction(id -> Objects.equals(rootId, id));
+
+        //是否返回root元素(未设置时默认false,开启时root元素必须存在)
+        functions.setIsWithRoot(() -> true);
+
+        //是否返回全部的子元素(未设置时默认false,即默认只返回root元素的直接子元素)
+        functions.setIsWithAllChildren(() -> true);
+
+        //设置获取children(如果当前数据列表为递归树数据,需要进行设置,否则子级数据会被跳过)
+        functions.setGetChildrenFunction((data) -> data.getChildren());
+
+        //设置转换函数
+        functions.setTransferFunction(menu -> {
+            //转换数据
+            return (JSONObject) JSON.toJSON(menu);
+        });
+
+        //过滤条件(可选,用来筛选数据)
+        functions.setFilterPredicate(menu -> menu.getId() % 2 == 0 || Objects.equals(rootId, menu.getId()));
+
+        //排序(需注意业务属性值是否为空),可选 -- 用于排序当前要处理的数据列表
+        Comparator<Menu> comparator = Comparator.comparingInt(Menu::getSort);
+
+        //获取打平后的结果(如果为递归树数据,children会被保留)
+        List<JSONObject> matchResults = HierarchyFlatUtils.getHierarchyFlatResult(
+                menuList,
+                functions,
+                comparator
+        );
+
+        Comparator<JSONObject> resultComparator = Comparator.comparing((data) -> data.getInteger("sort"));
+
+        //对返回结果排序(需注意业务属性值是否为空),可选
+        HierarchySortUtils.sort(matchResults, resultComparator);
+        System.out.println(JSONObject.toJSONString(matchResults));
+
+
+``` 
+
+### 场景4: 通过递归树数据源进行返回pid为2且包含自己的递归树数据
+
+``` 
+        
+        //用于筛选指定id作为根
+        Integer rootId = 2;
+
+        //排序(需注意业务属性值是否为空),可选
+        Comparator<Menu> comparator = Comparator.comparingInt(Menu::getSort);
+
+        HierarchyUtils.HierarchyFunctions<Menu, Integer, Menu> defaultFunctions = new HierarchyUtils.HierarchyFunctions<>();
+
+        //获取pid
+        defaultFunctions.setGetPidFunction(data -> data.getPid());
+
+        //获取id
+        defaultFunctions.setGetIdFunction(data -> data.getId());
+
+        //验证是否为root
+        defaultFunctions.setIsRootFunction(id -> Objects.equals(rootId, id));
+
+        //设置children
+        defaultFunctions.setSetChildrenFunction((parent, children) -> parent.setChildren(children));
+
+        //设置获取children(如果当前数据列表为递归树数据,需要进行设置,否则子级数据会被跳过)
+        defaultFunctions.setGetChildrenFunction((data) -> data.getChildren());
+
+        //是否返回root元素(未设置时默认false,开启时root元素必须存在)
+        defaultFunctions.setIsWithRoot(() -> true);
+
+        //过滤条件(可选,用来筛选数据)
+        defaultFunctions.setFilterPredicate(menu -> true);
+
+        //获取结果(注意: 原数据列表会被改变,如有需要请在执行前进行备份原数据..)
+        List<Menu> hierarchyResult = HierarchyUtils.getHierarchyResult(
+                menuList,
+                defaultFunctions,
+                comparator
+        );
+        System.out.println(JSONObject.toJSONString(hierarchyResult));
+        
+```
+
+### 其他: 如何对返回结果list排序的方法
 
 ``` 
     //对返回结果排序 （只排序当前列表，不会递归排序子元素）
