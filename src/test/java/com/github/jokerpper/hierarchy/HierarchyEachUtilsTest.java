@@ -93,8 +93,16 @@ public class HierarchyEachUtilsTest extends HierarchyBaseTest {
             }
         });
 
-    }
+        treeResults = null;
+        HierarchyEachUtils.recursionEach(treeResults, Menu::getChildren, (level, current, parent, parentList, children, hasExistChildren) -> {
+        });
 
+        treeResults = Collections.emptyList();
+        HierarchyEachUtils.recursionEach(treeResults, Menu::getChildren, (level, current, parent, parentList, children, hasExistChildren) -> {
+        });
+
+
+    }
 
 
     /**
@@ -114,7 +122,7 @@ public class HierarchyEachUtilsTest extends HierarchyBaseTest {
 
             @Override
             public void beforeEach(List<Menu> sourceList) {
-               //对源数据列表进行处理，比如有多个进行排个序？
+                //对源数据列表进行处理，比如有多个进行排个序？
             }
 
             @Override
