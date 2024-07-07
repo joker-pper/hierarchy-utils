@@ -1,3 +1,20 @@
+/*
+ *
+ * Copyright (c) 2021-2xxx, joker-pper (https://github.com/joker-pper).
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package com.github.jokerpper.hierarchy;
 
 import java.util.*;
@@ -157,9 +174,9 @@ public class HierarchyHelper {
      * 获取当前元素的子元素
      *
      * @param getChildrenFunction 获取children函数
-     * @param source
-     * @param <T>
-     * @return
+     * @param source              当前元素
+     * @param <T>                 当前元素类型
+     * @return 子元素列表
      */
     static <T> List<T> resolveAndGetChildren(final Function<T, List<T>> getChildrenFunction, final T source) {
         return getChildrenFunction.apply(source);
@@ -168,10 +185,10 @@ public class HierarchyHelper {
     /**
      * 设置当前元素的子元素
      *
-     * @param setChildrenFunction
-     * @param source
-     * @param children
-     * @param <T>
+     * @param setChildrenFunction 设置children函数
+     * @param source              当前元素
+     * @param children            子元素列表
+     * @param <T>                 当前元素类型
      */
     static <T> void resolveAndSetChildren(final BiConsumer<T, List<T>> setChildrenFunction, final T source, final List<T> children) {
         setChildrenFunction.accept(source, children);

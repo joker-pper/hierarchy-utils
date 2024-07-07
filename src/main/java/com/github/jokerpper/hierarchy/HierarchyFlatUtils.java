@@ -1,3 +1,20 @@
+/*
+ *
+ * Copyright (c) 2021-2xxx, joker-pper (https://github.com/joker-pper).
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package com.github.jokerpper.hierarchy;
 
 import java.util.*;
@@ -154,12 +171,12 @@ public class HierarchyFlatUtils {
      * 若对结果有排序需要,可通过 HierarchySortUtils 进行排序
      * <p>
      *
-     * @param sourceList 源数据列表
-     * @param functions
-     * @param <T>
-     * @param <R>
-     * @param <V>
-     * @return
+     * @param sourceList 源数据列表，不能存在为Null的子元素
+     * @param functions  函数
+     * @param <T>        源数据类型
+     * @param <R>        转换结果类型
+     * @param <V>        ID属性类型
+     * @return 转换结果
      * @see HierarchySortUtils
      */
     public static <T, R, V> List<R> getHierarchyFlatResult(final List<T> sourceList,
@@ -178,13 +195,13 @@ public class HierarchyFlatUtils {
      * 若对结果有排序需要,可通过 HierarchySortUtils 进行排序
      * <p>
      *
-     * @param sourceList 源数据列表
-     * @param functions
+     * @param sourceList 源数据列表，不能存在为Null的子元素
+     * @param functions  函数
      * @param comparator 可选 存在时会对筛选后的源数据列表进行排序
-     * @param <T>
-     * @param <R>
-     * @param <V>
-     * @return
+     * @param <T>        源数据类型
+     * @param <R>        转换结果类型
+     * @param <V>        ID属性类型
+     * @return 转换结果
      * @see HierarchySortUtils
      */
     public static <T, R, V> List<R> getHierarchyFlatResult(final List<T> sourceList,
