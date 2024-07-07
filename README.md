@@ -1,11 +1,12 @@
 # hierarchy-utils
 
+[![Java support](https://img.shields.io/badge/Java-8+-green?logo=java&logoColor=white)](https://openjdk.java.net/)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.joker-pper/hierarchy-utils.svg?label=Maven%20Central)](https://search.maven.org/search?q=io.github.joker-pper:hierarchy-utils)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![codecov](https://codecov.io/gh/joker-pper/hierarchy-utils/branch/main/graph/badge.svg)](https://codecov.io/gh/joker-pper/hierarchy-utils)
 
     用于构建/查找具有层级关系树形数据的工具库,以解决业务中常见的树形数据处理需求
-    支持自定义过滤数据、排序及转换数据等
+    支持自定义过滤数据、排序及转换数据、打平递归树数据、递归遍历树形数据处理等
 
 ## 快速使用
 
@@ -45,7 +46,7 @@ public class Menu {
         List<Menu> menuList = JSONObject.parseArray(menuText, Menu.class);;
 
 
-### 场景1: 通过原数据结构返回树形数据 (全部铺平的数据列表)
+### 场景1: 通过原数据结构返回树形数据 (原数据为全部铺平的数据列表)
 
 ``` 
        
@@ -192,7 +193,7 @@ public class Menu {
 ### 场景3-2: 【转换数据示例】返回源数据列表中id为rootId的元素或pid为rootId且id能整除2的全部子元素的数据列表 （支持将树形数据打平及过滤）
 
 ``` 
-          //用于筛选指定id作为根
+        //用于筛选指定id作为根
         Integer rootId = 1;
 
         HierarchyFlatUtils.HierarchyFlatFunctions<Menu, Integer, JSONObject> functions = new HierarchyFlatUtils.HierarchyFlatFunctions<>();
@@ -286,7 +287,9 @@ public class Menu {
         
 ```
 
-### 其他: 如何对返回结果list排序的方法
+### 其他
+
+#### 如何对返回结果list排序的方法
 
 ``` 
     //对返回结果排序 （只排序当前列表，不会递归排序子元素）
@@ -295,6 +298,44 @@ public class Menu {
     //对返回结果及子元素排序（递归排序）
     HierarchySortUtils.sortWithChildren(list, childrenFunction, comparator);  
 
+``` 
+
+#### 递归遍历树形数据处理 （1.0.2及以上版本）
+
+``` 
+        Integer rootId = -1;
+        List<Menu> treeResults = MenuResolver.getResolvedWithChildrenMenuList(rootId);
+        HierarchyEachUtils.recursionEach(treeResults, Menu::getChildren, new HierarchyEachUtils.EachCallback<Menu>() {
+
+            @Override
+            public boolean withParentList() {
+                //设置启用，后续用于获取遍历元素的所有父级列表
+                return true;
+            }
+
+            @Override
+            public void beforeEach(List<Menu> sourceList) {
+               //对源数据列表进行处理，比如有多个进行排个序？
+            }
+
+            @Override
+            public void each(int level, Menu current, Menu parent, List<Menu> parentList, List<Menu> children, boolean hasExistChildren) {
+
+                if (hasExistChildren) {
+                    //排序子元素 -- 降序
+                    children.sort(Comparator.comparing(Menu::getSort).reversed());
+                }
+
+                if (level == HierarchyEachUtils.FIRST_LEVEL) {
+                    //第一层级时 -- 没有真实存在的父元素
+                    System.out.println(String.format("level: %s, id: %s, sort: %s, parent id: %s, path: %s", level, current.getId(), current.getSort(), "-", current.getId()));
+                } else {
+                    System.out.println(String.format("level: %s, id: %s, sort: %s, parent id: %s, path: %s", level, current.getId(), current.getSort(), parent.getId(), Stream.of(parentList, Collections.singletonList(current)).flatMap(Collection::stream).map(Menu::getId).map(String::valueOf)
+                            .collect(Collectors.joining("-"))));
+
+                }
+            }
+        });
 ``` 
 
 ## 其他

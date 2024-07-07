@@ -6,15 +6,15 @@
 
     <groupId>io.github.joker-pper</groupId>
     <artifactId>hierarchy-utils</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <name>hierarchy-utils</name>
     <description>用于构建/查找具有层级关系树形数据的工具库</description>
-    <url>http://github.com/joker-pper/hierarchy-utils</url>
+    <url>https://github.com/joker-pper/hierarchy-utils</url>
 
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
         </license>
     </licenses>
 
@@ -27,7 +27,7 @@
     <scm>
         <connection>scm:git:git://github.com/joker-pper/hierarchy-utils.git</connection>
         <developerConnection>scm:git:ssh://github.com:joker-pper/hierarchy-utils.git</developerConnection>
-        <url>http://github.com/joker-pper/hierarchy-utils/tree/main</url>
+        <url>https://github.com/joker-pper/hierarchy-utils/tree/main</url>
     </scm>
 
     <properties>
@@ -85,6 +85,19 @@
     </distributionManagement>
 
     <build>
+
+        <resources>
+            <resource>
+                <directory>${pom.basedir}</directory>
+                <includes>
+                    <include>NOTICE</include>
+                    <include>LICENSE</include>
+                </includes>
+                <targetPath>META-INF</targetPath>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
+
         <plugins>
 
             <plugin>
@@ -213,16 +226,6 @@
                         </configuration>
                     </execution>
 
-                    <execution>
-                        <id>report-aggregate</id>
-                        <phase>${jacoco.report-aggregate.phase}</phase>
-                        <goals>
-                            <goal>report-aggregate</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>target/site/jacoco-aggregate</outputDirectory>
-                        </configuration>
-                    </execution>
                 </executions>
             </plugin>
 
